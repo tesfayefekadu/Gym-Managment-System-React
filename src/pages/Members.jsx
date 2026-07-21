@@ -3,10 +3,11 @@ import { useState } from "react";
 import MemberHeader from "../components/members/MemberHeader";
 import MemberSearch from "../components/members/MemberSearch";
 import MemberTable from "../components/members/MemberTable";
+import MemberModal from "../components/members/MemberModal";
+import MemberForm from "../components/members/MemberForm";
 
 function Members() {
-
-  const [members] = useState([
+  const [members, setMembers] = useState([
     {
       id: 1,
       name: "Tesfaye",
@@ -30,8 +31,29 @@ function Members() {
     },
   ]);
 
+  // Controls whether the modal is visible
+  const [showModal, setShowModal] = useState(false);
+
+  // Open modal
   const handleAddMember = () => {
-    console.log("Add Member");
+    setShowModal(true);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  // Save new member
+  const handleSaveMember = (newMember) => {
+    const member = {
+      id: members.length + 1,
+      ...newMember,
+    };
+
+    setMembers([...members, member]);
+
+    setShowModal(false);
   };
 
   return (
@@ -41,6 +63,12 @@ function Members() {
       <MemberSearch />
 
       <MemberTable members={members} />
+
+      {showModal && (
+        <MemberModal onClose={handleCloseModal}>
+          <MemberForm onSave={handleSaveMember} />
+        </MemberModal>
+      )}
     </>
   );
 }
