@@ -1,6 +1,6 @@
 import MemberRow from "./MemberRow";
 
-function MemberTable({ members }) {
+function MemberTable({ members, onEdit, onDelete }) {
   return (
     <div className="bg-white rounded-xl shadow overflow-hidden">
 
@@ -27,6 +27,8 @@ function MemberTable({ members }) {
             <MemberRow
               key={member.id}
               member={member}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
 

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function MemberForm({ onSave }) {
-
+function MemberForm({ onSave, initialData }) {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -9,13 +8,27 @@ function MemberForm({ onSave }) {
     status: "Active",
   });
 
+  // Populate the form when editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData({
+        name: "",
+        phone: "",
+        plan: "Basic",
+        status: "Active",
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleSubmit = (event) => {
@@ -37,6 +50,7 @@ function MemberForm({ onSave }) {
           value={formData.name}
           onChange={handleChange}
           className="w-full border rounded-lg px-4 py-2"
+          required
         />
       </div>
 
@@ -51,6 +65,7 @@ function MemberForm({ onSave }) {
           value={formData.phone}
           onChange={handleChange}
           className="w-full border rounded-lg px-4 py-2"
+          required
         />
       </div>
 
@@ -91,7 +106,7 @@ function MemberForm({ onSave }) {
         type="submit"
         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
       >
-        Save Member
+        {initialData ? "Update Member" : "Save Member"}
       </button>
 
     </form>

@@ -1,4 +1,4 @@
-function MemberModal({ children, onClose }) {
+function MemberModal({ children, onClose, title }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
 
@@ -7,14 +7,14 @@ function MemberModal({ children, onClose }) {
         <div className="flex justify-between items-center mb-6">
 
           <h2 className="text-2xl font-bold">
-            Add New Member
+            {title}
           </h2>
 
           <button
             onClick={onClose}
             className="text-2xl text-gray-500 hover:text-red-500"
           >
-            *
+            ×
           </button>
 
         </div>
@@ -22,6 +22,7 @@ function MemberModal({ children, onClose }) {
         {children}
 
       </div>
+
     </div>
   );
 }
