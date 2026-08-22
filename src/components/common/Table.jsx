@@ -1,107 +1,61 @@
-function Table({columns, data}) {
+function Table({
+  columns = [],
+  data = [],
+  renderRow = () => null,
+}) {
+
+  return (
+    <div className="bg-white rounded-xl shadow overflow-hidden">
+
+      <table className="min-w-full">
+
+        <thead className="bg-gray-100">
+
+          <tr>
+
+            {columns.map((column) => (
+
+              <th
+                key={column.key}
+                className="px-6 py-4 text-left font-semibold"
+              >
+                {column.label}
+              </th>
+
+            ))}
+
+          </tr>
+
+        </thead>
 
 
-return (
+        <tbody>
 
-<div className="
-bg-white
-rounded-xl
-shadow
-overflow-hidden
-">
+          {data.length > 0 ? (
 
+            data.map(renderRow)
 
-<table className="w-full text-left">
+          ) : (
 
+            <tr>
 
-<thead className="bg-gray-100">
+              <td
+                colSpan={columns.length}
+                className="text-center py-10 text-gray-500"
+              >
+                No data found.
+              </td>
 
-<tr>
+            </tr>
 
-{
-columns.map((column,index)=>(
+          )}
 
-<th
-key={index}
-className="
-px-6
-py-4
-font-semibold
-text-gray-700
-"
->
+        </tbody>
 
-{column}
+      </table>
 
-</th>
-
-))
+    </div>
+  );
 }
-
-</tr>
-
-</thead>
-
-
-
-<tbody>
-
-
-{
-data.map((row,index)=>(
-
-
-<tr
-key={index}
-className="
-border-b
-hover:bg-gray-50
-"
->
-
-
-{
-Object.values(row).map((value,i)=>(
-
-
-<td
-key={i}
-className="
-px-6
-py-4
-"
->
-
-{value}
-
-</td>
-
-
-))
-
-}
-
-
-</tr>
-
-
-))
-}
-
-
-
-</tbody>
-
-
-
-</table>
-
-
-</div>
-
-);
-
-}
-
 
 export default Table;
