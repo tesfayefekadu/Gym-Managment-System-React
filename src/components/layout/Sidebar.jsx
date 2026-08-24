@@ -21,7 +21,7 @@ function Sidebar() {
         </li>
 
         <li>
-          <NavLink to="/memberships">Memberships</NavLink>
+          <NavLink to="/membership-plans">Memberships</NavLink>
         </li>
 
         <li>
