@@ -1,7 +1,13 @@
-function TrainerRow({ trainer }) {
+import Badge from "../common/Badge";
+import Button from "../common/Button";
 
+function TrainerRow({
+  trainer,
+  onView,
+  onEdit,
+  onDelete,
+}) {
   return (
-
     <tr className="border-b hover:bg-gray-50">
 
       <td className="px-6 py-4">
@@ -25,57 +31,48 @@ function TrainerRow({ trainer }) {
       </td>
 
       <td className="px-6 py-4">
-
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
+        <Badge
+          variant={
             trainer.status === "Active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
+              ? "success"
+              : "danger"
+          }
         >
           {trainer.status}
-        </span>
-
+        </Badge>
       </td>
 
       <td className="px-6 py-4">
 
-        <div className="flex justify-center gap-2">
+        <div className="flex gap-2 justify-center">
 
-          <button
-            className="
-            bg-yellow-500
-            hover:bg-yellow-600
-            text-white
-            px-3
-            py-1
-            rounded
-            "
+          <Button
+            variant="primary"
+            onClick={() => onView(trainer)}
+          >
+            View
+          </Button>
+
+          <Button
+            variant="warning"
+            onClick={() => onEdit(trainer)}
           >
             Edit
-          </button>
+          </Button>
 
-          <button
-            className="
-            bg-red-600
-            hover:bg-red-700
-            text-white
-            px-3
-            py-1
-            rounded
-            "
+          <Button
+            variant="danger"
+            onClick={() => onDelete(trainer.id)}
           >
             Delete
-          </button>
+          </Button>
 
         </div>
 
       </td>
 
     </tr>
-
   );
-
 }
 
 export default TrainerRow;
