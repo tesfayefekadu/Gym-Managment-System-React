@@ -1,45 +1,69 @@
 import Badge from "../common/Badge";
+import Button from "../common/Button";
 
-function MemberRow({ member, onEdit, onDelete }) {
+function MemberRow({
+  member,
+  onEdit,
+  onDelete,
+}) {
   return (
     <tr className="border-b hover:bg-gray-50">
 
+      {/* ID */}
       <td className="px-6 py-4">
         {member.id}
       </td>
 
+      {/* Name */}
       <td className="px-6 py-4 font-medium">
         {member.name}
       </td>
 
+      {/* Plan */}
       <td className="px-6 py-4">
-        {member.plan}
+        {member.membership_plan ||
+          "No Plan"}
       </td>
 
+      {/* Phone */}
       <td className="px-6 py-4">
-        {member.phone}
+        {member.phone || "-"}
       </td>
 
+      {/* Status */}
       <td className="px-6 py-4">
-        <Badge status={member.status} />
-      </td>
-
-      <td className="px-6 py-4 space-x-2">
-
-        <button
-          onClick={() => onEdit(member)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+        <Badge
+          variant={
+            member.status === "Active"
+              ? "success"
+              : "danger"
+          }
         >
-          Edit
-        </button>
+          {member.status || "Unknown"}
+        </Badge>
+      </td>
 
-        <button
-          onClick={() => onDelete(member)}
-          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-        >
-          Delete
-        </button>
+      {/* Actions */}
+      <td className="px-6 py-4">
+        <div className="flex justify-center gap-2">
 
+          <Button
+            variant="primary"
+            onClick={() => onEdit(member)}
+          >
+            Edit
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={() =>
+              onDelete(member)
+            }
+          >
+            Delete
+          </Button>
+
+        </div>
       </td>
 
     </tr>

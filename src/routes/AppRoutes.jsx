@@ -5,7 +5,7 @@ import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard";
 import Members from "../pages/Members";
 import Trainers from "../pages/Trainers";
-import Memberships from "../pages/Memberships";
+import MembershipPlans from "../pages/MembershipPlans";
 import Attendance from "../pages/Attendance";
 import Payments from "../pages/Payments";
 
@@ -49,12 +49,11 @@ function AppRoutes() {
       />
 
       <Route
-        path="/memberships"
+        path="/membership-plans"
         element={
           <Layout>
-            <Memberships />
-          </Layout>
-        }
+            <MembershipPlans />
+          </Layout>}
       />
 
       <Route
