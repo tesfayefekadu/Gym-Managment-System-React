@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 
-// ==========================
+// =====================================================
 // Components
-// ==========================
+// =====================================================
+
 import Pagination from "../components/members/Pagination";
 import MemberHeader from "../components/members/MemberHeader";
 import MemberFilter from "../components/members/MemberFilter";
@@ -11,9 +12,10 @@ import MemberModal from "../components/members/MemberModal";
 import MemberForm from "../components/members/MemberForm";
 import DeleteModal from "../components/members/DeleteModal";
 
-// ==========================
+// =====================================================
 // API Service
-// ==========================
+// =====================================================
+
 import {
   getMembers,
   createMember,
@@ -25,25 +27,56 @@ import {
 function Members() {
 
   // =====================================================
-  // Member Data State
+  // Member Data
   // =====================================================
+
   const [members, setMembers] = useState([]);
 
+
   // =====================================================
-  // Loading & Error State
+  // Loading State
   // =====================================================
+
   const [loading, setLoading] = useState(true);
+
+
+  // =====================================================
+  // Error State
+  // =====================================================
+
   const [error, setError] = useState("");
+
+
+  // =====================================================
+  // Success State
+  // =====================================================
+
+  const [successMessage, setSuccessMessage] =
+    useState("");
+
+
+  // =====================================================
+  // Saving State
+  // =====================================================
+
+  const [saving, setSaving] =
+    useState(false);
 
 
   // =====================================================
   // Modal States
   // =====================================================
+
   const [showModal, setShowModal] =
     useState(false);
 
   const [showDeleteModal, setShowDeleteModal] =
     useState(false);
+
+
+  // =====================================================
+  // Selected Member
+  // =====================================================
 
   const [selectedMember, setSelectedMember] =
     useState(null);
@@ -52,6 +85,7 @@ function Members() {
   // =====================================================
   // Filter States
   // =====================================================
+
   const [searchTerm, setSearchTerm] =
     useState("");
 
@@ -63,8 +97,9 @@ function Members() {
 
 
   // =====================================================
-  // Pagination State
+  // Pagination
   // =====================================================
+
   const [currentPage, setCurrentPage] =
     useState(1);
 
@@ -72,8 +107,9 @@ function Members() {
 
 
   // =====================================================
-  // LOAD MEMBERS FROM BACKEND
+  // LOAD MEMBERS
   // =====================================================
+
   const loadMembers = async () => {
 
     try {
@@ -111,8 +147,9 @@ function Members() {
 
 
   // =====================================================
-  // LOAD MEMBERS WHEN PAGE OPENS
+  // INITIAL LOAD
   // =====================================================
+
   useEffect(() => {
 
     loadMembers();
@@ -123,6 +160,7 @@ function Members() {
   // =====================================================
   // RESET PAGE WHEN FILTER CHANGES
   // =====================================================
+
   useEffect(() => {
 
     setCurrentPage(1);
@@ -135,9 +173,35 @@ function Members() {
 
 
   // =====================================================
+  // CLEAR SUCCESS MESSAGE
+  // =====================================================
+
+  useEffect(() => {
+
+    if (!successMessage) {
+      return;
+    }
+
+    const timer =
+      setTimeout(() => {
+
+        setSuccessMessage("");
+
+      }, 3000);
+
+    return () => clearTimeout(timer);
+
+  }, [successMessage]);
+
+
+  // =====================================================
   // ADD MEMBER
   // =====================================================
+
   const handleAddMember = () => {
+
+    setError("");
+    setSuccessMessage("");
 
     setSelectedMember(null);
 
@@ -149,12 +213,16 @@ function Members() {
   // =====================================================
   // EDIT MEMBER
   // =====================================================
+
   const handleEditMember = (member) => {
 
     console.log(
       "Editing member:",
       member
     );
+
+    setError("");
+    setSuccessMessage("");
 
     setSelectedMember(member);
 
@@ -166,7 +234,11 @@ function Members() {
   // =====================================================
   // DELETE MEMBER
   // =====================================================
+
   const handleDeleteMember = (member) => {
+
+    setError("");
+    setSuccessMessage("");
 
     setSelectedMember(member);
 
@@ -176,9 +248,14 @@ function Members() {
 
 
   // =====================================================
-  // CLOSE MEMBER FORM
+  // CLOSE MEMBER MODAL
   // =====================================================
+
   const handleCloseModal = () => {
+
+    if (saving) {
+      return;
+    }
 
     setShowModal(false);
 
@@ -189,25 +266,25 @@ function Members() {
 
   // =====================================================
   // SAVE MEMBER
-  // CREATE OR UPDATE
+  // CREATE / UPDATE
   // =====================================================
+
   const handleSaveMember = async (
     memberData
   ) => {
 
     try {
 
+      setSaving(true);
+
       setError("");
-
-      console.log(
-        "Saving member:",
-        memberData
-      );
+      setSuccessMessage("");
 
 
-      // ==========================================
-      // UPDATE EXISTING MEMBER
-      // ==========================================
+      // =================================================
+      // UPDATE
+      // =================================================
+
       if (selectedMember) {
 
         await updateMember(
@@ -215,30 +292,41 @@ function Members() {
           memberData
         );
 
+        setSuccessMessage(
+          "Member updated successfully."
+        );
+
       }
 
-      // ==========================================
-      // CREATE NEW MEMBER
-      // ==========================================
+
+      // =================================================
+      // CREATE
+      // =================================================
+
       else {
 
         await createMember(
           memberData
         );
 
+        setSuccessMessage(
+          "Member created successfully."
+        );
+
       }
 
 
-      // ==========================================
-      // IMPORTANT
-      // Reload data from PostgreSQL
-      // ==========================================
+      // =================================================
+      // RELOAD DATA
+      // =================================================
+
       await loadMembers();
 
 
-      // ==========================================
-      // Close modal
-      // ==========================================
+      // =================================================
+      // CLOSE MODAL
+      // =================================================
+
       setShowModal(false);
 
       setSelectedMember(null);
@@ -256,6 +344,12 @@ function Members() {
         "Failed to save member"
       );
 
+      // Keep modal open so user can correct it
+
+    } finally {
+
+      setSaving(false);
+
     }
 
   };
@@ -264,6 +358,7 @@ function Members() {
   // =====================================================
   // CONFIRM DELETE
   // =====================================================
+
   const confirmDelete = async () => {
 
     if (!selectedMember) {
@@ -273,6 +368,7 @@ function Members() {
     try {
 
       setError("");
+      setSuccessMessage("");
 
 
       await deleteMember(
@@ -280,10 +376,16 @@ function Members() {
       );
 
 
-      // ==========================================
-      // Reload members after delete
-      // ==========================================
+      // =================================================
+      // RELOAD MEMBERS
+      // =================================================
+
       await loadMembers();
+
+
+      setSuccessMessage(
+        "Member deleted successfully."
+      );
 
 
       setShowDeleteModal(false);
@@ -311,6 +413,7 @@ function Members() {
   // =====================================================
   // CANCEL DELETE
   // =====================================================
+
   const cancelDelete = () => {
 
     setShowDeleteModal(false);
@@ -323,12 +426,14 @@ function Members() {
   // =====================================================
   // FILTER MEMBERS
   // =====================================================
+
   const filteredMembers =
     members.filter((member) => {
 
-      // ------------------------------------------
-      // Search
-      // ------------------------------------------
+      // -----------------------------------------------
+      // SEARCH
+      // -----------------------------------------------
+
       const search =
         searchTerm.toLowerCase();
 
@@ -348,9 +453,10 @@ function Members() {
         memberEmail.includes(search);
 
 
-      // ------------------------------------------
-      // Membership Plan
-      // ------------------------------------------
+      // -----------------------------------------------
+      // MEMBERSHIP PLAN
+      // -----------------------------------------------
+
       const memberPlan =
         member.membership_plan || "";
 
@@ -360,9 +466,10 @@ function Members() {
         memberPlan === planFilter;
 
 
-      // ------------------------------------------
-      // Status
-      // ------------------------------------------
+      // -----------------------------------------------
+      // STATUS
+      // -----------------------------------------------
+
       const matchesStatus =
         statusFilter === "All" ||
         member.status === statusFilter;
@@ -380,6 +487,7 @@ function Members() {
   // =====================================================
   // PAGINATION
   // =====================================================
+
   const totalPages =
     Math.ceil(
       filteredMembers.length /
@@ -407,6 +515,7 @@ function Members() {
   // =====================================================
   // RESET FILTERS
   // =====================================================
+
   const handleResetFilters = () => {
 
     setSearchTerm("");
@@ -423,6 +532,7 @@ function Members() {
   // =====================================================
   // LOADING SCREEN
   // =====================================================
+
   if (loading) {
 
     return (
@@ -443,9 +553,13 @@ function Members() {
 
 
   // =====================================================
-  // ERROR SCREEN
+  // INITIAL ERROR SCREEN
   // =====================================================
-  if (error && members.length === 0) {
+
+  if (
+    error &&
+    members.length === 0
+  ) {
 
     return (
       <div className="p-6">
@@ -478,12 +592,15 @@ function Members() {
   // =====================================================
   // PAGE
   // =====================================================
+
   return (
     <div className="space-y-6">
 
-      {/* ==========================================
-          Header
-          ========================================== */}
+
+      {/* =================================================
+          HEADER
+          ================================================= */}
+
       <MemberHeader
         onAddMember={
           handleAddMember
@@ -491,10 +608,38 @@ function Members() {
       />
 
 
-      {/* ==========================================
-          Error Message
-          ========================================== */}
+      {/* =================================================
+          SUCCESS MESSAGE
+          ================================================= */}
+
+      {successMessage && (
+
+        <div className="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg flex justify-between items-center">
+
+          <span>
+            {successMessage}
+          </span>
+
+          <button
+            onClick={() =>
+              setSuccessMessage("")
+            }
+            className="font-bold text-lg"
+          >
+            ×
+          </button>
+
+        </div>
+
+      )}
+
+
+      {/* =================================================
+          ERROR MESSAGE
+          ================================================= */}
+
       {error && (
+
         <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex justify-between items-center">
 
           <span>
@@ -505,18 +650,20 @@ function Members() {
             onClick={() =>
               setError("")
             }
-            className="font-bold"
+            className="font-bold text-lg"
           >
             ×
           </button>
 
         </div>
+
       )}
 
 
-      {/* ==========================================
-          Filters
-          ========================================== */}
+      {/* =================================================
+          FILTER
+          ================================================= */}
+
       <MemberFilter
 
         searchTerm={
@@ -554,9 +701,10 @@ function Members() {
       />
 
 
-      {/* ==========================================
-          Member Table
-          ========================================== */}
+      {/* =================================================
+          MEMBER TABLE
+          ================================================= */}
+
       <MemberTable
 
         members={
@@ -574,9 +722,10 @@ function Members() {
       />
 
 
-      {/* ==========================================
-          Pagination
-          ========================================== */}
+      {/* =================================================
+          PAGINATION
+          ================================================= */}
+
       {totalPages > 1 && (
 
         <Pagination
@@ -598,9 +747,10 @@ function Members() {
       )}
 
 
-      {/* ==========================================
+      {/* =================================================
           ADD / EDIT MODAL
-          ========================================== */}
+          ================================================= */}
+
       {showModal && (
 
         <MemberModal
@@ -638,9 +788,10 @@ function Members() {
       )}
 
 
-      {/* ==========================================
+      {/* =================================================
           DELETE MODAL
-          ========================================== */}
+          ================================================= */}
+
       {showDeleteModal && (
 
         <DeleteModal
