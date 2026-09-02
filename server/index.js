@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const pool = require("./config/db");
 const memberRoutes = require("./routes/memberRoutes");
+const trainerRoutes = require("./routes/trainerRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/members", memberRoutes);
+app.use("/api/trainers",trainerRoutes);
 
 // Test route
 app.get("/", (req, res) => {
