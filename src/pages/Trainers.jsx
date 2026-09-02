@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import Pagination from "../components/common/Pagination";
 import TrainerHeader from "../components/trainers/TrainerHeader";
 import TrainerStats from "../components/trainers/TrainerStats";
 import TrainerTable from "../components/trainers/TrainerTable";
@@ -13,11 +13,13 @@ import ConfirmDialog from "../components/common/ConfirmDialog";
 
 function Trainer() {
   const {
-  trainers,
-  addTrainer,
-  updateTrainer,
-  deleteTrainer,
-} = useTrainers();
+    trainers,
+    addTrainer,
+    updateTrainer,
+    deleteTrainer,
+    loading,
+    error,
+  } = useTrainers();
 
   // ==========================
   // Modal States
@@ -31,6 +33,9 @@ function Trainer() {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [trainerToDelete, setTrainerToDelete] = useState(null);
+
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ==========================
   // Filter States
@@ -73,6 +78,8 @@ function Trainer() {
   };
 
   const handleCloseModal = () => {
+    if (saving) return;
+
     setShowModal(false);
     setSelectedTrainer(null);
   };
@@ -81,35 +88,66 @@ function Trainer() {
   // Save Trainer
   // ==========================
 
- const handleSaveTrainer = (trainerData) => {
-  if (selectedTrainer) {
-    updateTrainer(selectedTrainer.id, trainerData);
-  } else {
-    addTrainer(trainerData);
-  }
+  const handleSaveTrainer = async (trainerData) => {
+    try {
+      setSaving(true);
 
-  handleCloseModal();
-};
+      if (selectedTrainer) {
+        await updateTrainer(
+          selectedTrainer.id,
+          trainerData
+        );
+      } else {
+        await addTrainer(trainerData);
+      }
+
+      // Close only after successful API request
+      setShowModal(false);
+      setSelectedTrainer(null);
+    } catch (error) {
+      console.error("Save trainer error:", error);
+
+      // Keep modal open so user can correct the data
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ==========================
   // Delete Trainer
   // ==========================
 
   const handleDeleteTrainer = (id) => {
-    const trainer = trainers.find((t) => t.id === id);
+    const trainer = trainers.find(
+      (t) => t.id === id
+    );
+
+    if (!trainer) return;
 
     setTrainerToDelete(trainer);
     setShowDeleteDialog(true);
   };
 
-  const confirmDeleteTrainer = () => {
-  deleteTrainer(trainerToDelete.id);
+  const confirmDeleteTrainer = async () => {
+    if (!trainerToDelete) return;
 
-  setTrainerToDelete(null);
-  setShowDeleteDialog(false);
-};
+    try {
+      setDeleting(true);
+
+      await deleteTrainer(trainerToDelete.id);
+
+      setTrainerToDelete(null);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Delete trainer error:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const cancelDeleteTrainer = () => {
+    if (deleting) return;
+
     setTrainerToDelete(null);
     setShowDeleteDialog(false);
   };
@@ -119,20 +157,29 @@ function Trainer() {
   // ==========================
 
   const handleResetFilters = () => {
-    setSearch("");
-    setSpecialization("All");
-    setStatus("All");
-  };
+  setSearch("");
+  setSpecialization("All");
+  setStatus("All");
+  setCurrentPage(1);
+};
 
   // ==========================
   // Filter Trainers
   // ==========================
 
   const filteredTrainers = trainers.filter((trainer) => {
+    const searchValue = search.toLowerCase();
+
     const matchesSearch =
-      trainer.name.toLowerCase().includes(search.toLowerCase()) ||
-      trainer.phone.includes(search) ||
-      trainer.email.toLowerCase().includes(search.toLowerCase());
+      (trainer.name || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      (trainer.phone || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      (trainer.email || "")
+        .toLowerCase()
+        .includes(searchValue);
 
     const matchesSpecialization =
       specialization === "All" ||
@@ -149,31 +196,112 @@ function Trainer() {
     );
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const trainersPerPage = 10;
+
+
+  // ==========================
+  // Pagination
+  // ==========================
+
+  const totalPages = Math.ceil(
+    filteredTrainers.length / trainersPerPage
+  );
+
+  const startIndex =
+    (currentPage - 1) * trainersPerPage;
+
+  const paginatedTrainers =
+    filteredTrainers.slice(
+      startIndex,
+      startIndex + trainersPerPage
+    );
+
+  // ==========================
+  // Loading State
+  // ==========================
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg font-semibold text-gray-600">
+          Loading trainers...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <TrainerHeader onAddTrainer={handleAddTrainer} />
+      {/* ==========================
+          Error Message
+      ========================== */}
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-100 border border-red-300 px-4 py-3 text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* ==========================
+          Header
+      ========================== */}
+
+      <TrainerHeader
+        onAddTrainer={handleAddTrainer}
+      />
+
+      {/* ==========================
+          Statistics
+      ========================== */}
 
       <TrainerStats trainers={trainers} />
 
+      {/* ==========================
+          Filters
+      ========================== */}
+
       <TrainerFilter
         search={search}
-        setSearch={setSearch}
+        setSearch={(value) => {
+          setSearch(value);
+          setCurrentPage(1);
+        }}
         specialization={specialization}
-        setSpecialization={setSpecialization}
+        setSpecialization={(value) => {
+  setSpecialization(value);
+  setCurrentPage(1);
+}}
         status={status}
-        setStatus={setStatus}
+        setStatus={(value) => {
+  setStatus(value);
+  setCurrentPage(1);
+}}
         total={filteredTrainers.length}
         onReset={handleResetFilters}
       />
 
+      {/* ==========================
+          Trainer Table
+      ========================== */}
+
       <TrainerTable
-        trainers={filteredTrainers}
+        trainers={paginatedTrainers}
         onView={handleViewTrainer}
         onEdit={handleEditTrainer}
         onDelete={handleDeleteTrainer}
       />
 
-      {/* Add / Edit Trainer */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+
+      {/* ==========================
+          Add / Edit Trainer Modal
+      ========================== */}
 
       <Modal
         isOpen={showModal}
@@ -187,10 +315,13 @@ function Trainer() {
         <TrainerForm
           onSave={handleSaveTrainer}
           initialData={selectedTrainer}
+          loading={saving}
         />
       </Modal>
 
-      {/* Trainer Profile */}
+      {/* ==========================
+          Trainer Profile Modal
+      ========================== */}
 
       <Modal
         isOpen={showProfileModal}
@@ -203,7 +334,9 @@ function Trainer() {
         />
       </Modal>
 
-      {/* Delete Dialog */}
+      {/* ==========================
+          Delete Confirmation
+      ========================== */}
 
       <ConfirmDialog
         isOpen={showDeleteDialog}
@@ -215,6 +348,7 @@ function Trainer() {
         }
         onConfirm={confirmDeleteTrainer}
         onCancel={cancelDeleteTrainer}
+        loading={deleting}
       />
     </>
   );

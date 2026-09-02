@@ -1,44 +1,124 @@
-// Initial Trainer Data
+const API_URL =
+  `${import.meta.env.VITE_API_URL}/api/trainers`;
 
-const initialTrainers = [
-  {
-    id: 1,
-    name: "Abel Bekele",
-    gender: "Male",
-    phone: "0911223344",
-    email: "abel@gmail.com",
-    specialization: "Weight Training",
-    experience: 5,
-    salary: 15000,
-    hireDate: "2025-01-10",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "John Mark",
-    gender: "Male",
-    phone: "0912334455",
-    email: "john@gmail.com",
-    specialization: "Cardio",
-    experience: 3,
-    salary: 12000,
-    hireDate: "2025-03-15",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Samuel Tesfaye",
-    gender: "Male",
-    phone: "0913445566",
-    email: "samuel@gmail.com",
-    specialization: "Yoga",
-    experience: 7,
-    salary: 18000,
-    hireDate: "2024-08-01",
-    status: "Inactive",
-  },
-];
 
-export function getInitialTrainers() {
-  return initialTrainers;
-}
+// ========================================
+// HANDLE API RESPONSE
+// ========================================
+
+const handleResponse = async (response) => {
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = null;
+  }
+
+  if (!response.ok) {
+
+    const message =
+      data?.message ||
+      data?.error ||
+      `Request failed with status ${response.status}`;
+
+    throw new Error(message);
+  }
+
+  return data;
+};
+
+
+// ========================================
+// GET ALL TRAINERS
+// ========================================
+
+export const getTrainers = async () => {
+
+  const response = await fetch(API_URL);
+
+  return await handleResponse(response);
+};
+
+
+// ========================================
+// GET SINGLE TRAINER
+// ========================================
+
+export const getTrainerById = async (id) => {
+
+  const response = await fetch(
+    `${API_URL}/${id}`
+  );
+
+  return await handleResponse(response);
+};
+
+
+// ========================================
+// CREATE TRAINER
+// ========================================
+
+export const createTrainer = async (
+  trainerData
+) => {
+
+  const response = await fetch(
+    API_URL,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(trainerData),
+    }
+  );
+
+  return await handleResponse(response);
+};
+
+
+// ========================================
+// UPDATE TRAINER
+// ========================================
+
+export const updateTrainer = async (
+  id,
+  trainerData
+) => {
+
+  const response = await fetch(
+    `${API_URL}/${id}`,
+    {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(trainerData),
+    }
+  );
+
+  return await handleResponse(response);
+};
+
+
+// ========================================
+// DELETE TRAINER
+// ========================================
+
+export const deleteTrainer = async (id) => {
+
+  const response = await fetch(
+    `${API_URL}/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  return await handleResponse(response);
+};
