@@ -157,11 +157,11 @@ function Trainer() {
   // ==========================
 
   const handleResetFilters = () => {
-  setSearch("");
-  setSpecialization("All");
-  setStatus("All");
-  setCurrentPage(1);
-};
+    setSearch("");
+    setSpecialization("All");
+    setStatus("All");
+    setCurrentPage(1);
+  };
 
   // ==========================
   // Filter Trainers
@@ -270,14 +270,14 @@ function Trainer() {
         }}
         specialization={specialization}
         setSpecialization={(value) => {
-  setSpecialization(value);
-  setCurrentPage(1);
-}}
+          setSpecialization(value);
+          setCurrentPage(1);
+        }}
         status={status}
         setStatus={(value) => {
-  setStatus(value);
-  setCurrentPage(1);
-}}
+          setStatus(value);
+          setCurrentPage(1);
+        }}
         total={filteredTrainers.length}
         onReset={handleResetFilters}
       />
