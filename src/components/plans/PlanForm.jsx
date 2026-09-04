@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Button from "../common/Button";
 import InputField from "../common/InputField";
@@ -8,10 +11,11 @@ function PlanForm({
   onSave,
   initialData,
   existingPlans = [],
+  loading = false,
 }) {
   const emptyPlan = {
     name: "",
-    duration: "1 Month",
+    duration_months: "1",
     price: "",
     description: "",
     status: "Active",
@@ -23,14 +27,24 @@ function PlanForm({
   const [errors, setErrors] =
     useState({});
 
+  // ==========================
+  // Load Initial Data
+  // ==========================
+
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name || "",
-        duration: initialData.duration || "1 Month",
-        price: initialData.price || "",
-        description: initialData.description || "",
-        status: initialData.status || "Active",
+        duration_months:
+          initialData.duration_months
+            ? String(initialData.duration_months)
+            : "1",
+        price:
+          initialData.price ?? "",
+        description:
+          initialData.description || "",
+        status:
+          initialData.status || "Active",
       });
     } else {
       setFormData(emptyPlan);
@@ -40,7 +54,7 @@ function PlanForm({
   }, [initialData]);
 
   // ==========================
-  // Handle Input Change
+  // Handle Change
   // ==========================
 
   const handleChange = (e) => {
@@ -51,7 +65,6 @@ function PlanForm({
       [name]: value,
     }));
 
-    // Remove error when user starts correcting field
     setErrors((prev) => ({
       ...prev,
       [name]: "",
@@ -66,7 +79,8 @@ function PlanForm({
     const newErrors = {};
 
     // Plan Name
-    const planName = formData.name.trim();
+    const planName =
+      formData.name.trim();
 
     if (!planName) {
       newErrors.name =
@@ -77,13 +91,23 @@ function PlanForm({
     }
 
     // Duration
-    if (!formData.duration) {
-      newErrors.duration =
+    const durationMonths =
+      Number(formData.duration_months);
+
+    if (!formData.duration_months) {
+      newErrors.duration_months =
         "Please select a duration.";
+    } else if (
+      Number.isNaN(durationMonths) ||
+      durationMonths <= 0
+    ) {
+      newErrors.duration_months =
+        "Duration must be greater than 0.";
     }
 
     // Price
-    const price = Number(formData.price);
+    const price =
+      Number(formData.price);
 
     if (
       formData.price === "" ||
@@ -120,11 +144,15 @@ function PlanForm({
     // Duplicate Plan Name
     const duplicatePlan =
       existingPlans.some((plan) => {
+        const existingName =
+          (plan.name || "")
+            .trim()
+            .toLowerCase();
+
         const sameName =
-          plan.name.trim().toLowerCase() ===
+          existingName ===
           planName.toLowerCase();
 
-        // Ignore current plan while editing
         const isDifferentPlan =
           !initialData ||
           plan.id !== initialData.id;
@@ -148,24 +176,32 @@ function PlanForm({
   };
 
   // ==========================
-  // Submit Form
+  // Submit
   // ==========================
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (loading) return;
+
     const isValid = validateForm();
 
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
     const cleanedData = {
-      ...formData,
       name: formData.name.trim(),
+
+      duration_months:
+        Number(formData.duration_months),
+
+      price:
+        Number(formData.price),
+
       description:
         formData.description.trim(),
-      price: Number(formData.price),
+
+      status:
+        formData.status,
     };
 
     onSave(cleanedData);
@@ -205,32 +241,32 @@ function PlanForm({
         <div>
           <SelectField
             label="Duration"
-            name="duration"
-            value={formData.duration}
+            name="duration_months"
+            value={formData.duration_months}
             onChange={handleChange}
             options={[
               {
-                value: "1 Month",
+                value: "1",
                 label: "1 Month",
               },
               {
-                value: "3 Months",
+                value: "3",
                 label: "3 Months",
               },
               {
-                value: "6 Months",
+                value: "6",
                 label: "6 Months",
               },
               {
-                value: "12 Months",
+                value: "12",
                 label: "12 Months",
               },
             ]}
           />
 
-          {errors.duration && (
+          {errors.duration_months && (
             <p className="mt-1 text-sm text-red-600">
-              {errors.duration}
+              {errors.duration_months}
             </p>
           )}
         </div>
@@ -323,8 +359,11 @@ function PlanForm({
         <Button
           type="submit"
           variant="primary"
+          disabled={loading}
         >
-          {initialData
+          {loading
+            ? "Saving..."
+            : initialData
             ? "Update Plan"
             : "Save Plan"}
         </Button>

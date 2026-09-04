@@ -22,7 +22,7 @@ function PlanRow({
 
       {/* Duration */}
       <td className="px-6 py-4">
-        {plan.duration}
+        {plan.duration_months}
       </td>
 
       {/* Price */}

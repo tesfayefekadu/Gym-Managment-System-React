@@ -45,7 +45,7 @@ function PlanView({ plan, onClose }) {
           </p>
 
           <p className="text-lg font-semibold text-gray-800 mt-1">
-            {plan.duration}
+            {plan.duration_months}
           </p>
         </div>
 
