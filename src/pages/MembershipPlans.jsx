@@ -1,7 +1,4 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import PlanHeader from "../components/plans/PlanHeader";
 import PlanStats from "../components/plans/PlanStats";
@@ -14,106 +11,67 @@ import Modal from "../components/common/Modal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import Pagination from "../components/common/Pagination";
 
+import useMembershipPlans from "../hooks/useMembershipPlans";
+
 function MembershipPlans() {
   // ==========================
-  // Plans Data
+  // Membership Plans
   // ==========================
 
-  const [plans, setPlans] = useState([
-    {
-      id: 1,
-      name: "Basic",
-      duration: "1 Month",
-      price: 1200,
-      description: "Basic gym access",
-      members: 25,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Standard",
-      duration: "3 Months",
-      price: 3000,
-      description:
-        "Gym access with standard facilities",
-      members: 35,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Premium",
-      duration: "6 Months",
-      price: 5500,
-      description:
-        "Unlimited gym access",
-      members: 48,
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "VIP",
-      duration: "12 Months",
-      price: 10000,
-      description:
-        "Premium facilities and personal training",
-      members: 15,
-      status: "Inactive",
-    },
-  ]);
+  const {
+    plans,
+    addPlan,
+    updatePlan,
+    deletePlan,
+    loading,
+    error,
+  } = useMembershipPlans();
 
   // ==========================
-  // Add / Edit Modal
+  // Modal States
   // ==========================
 
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [selectedPlan, setSelectedPlan] =
-    useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   // ==========================
   // View Modal
   // ==========================
 
-  const [showViewModal, setShowViewModal] =
-    useState(false);
-
-  const [viewPlan, setViewPlan] =
-    useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewPlan, setViewPlan] = useState(null);
 
   // ==========================
   // Delete Dialog
   // ==========================
 
-  const [
-    showDeleteDialog,
-    setShowDeleteDialog,
-  ] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] =
+    useState(false);
 
-  const [planToDelete, setPlanToDelete] =
-    useState(null);
+  const [planToDelete, setPlanToDelete] = useState(null);
 
   // ==========================
   // Filter State
   // ==========================
 
   const [search, setSearch] = useState("");
-
-  const [status, setStatus] =
-    useState("All");
-
-  const [duration, setDuration] =
-    useState("All");
+  const [status, setStatus] = useState("All");
+  const [duration, setDuration] = useState("All");
 
   // ==========================
-  // Pagination State
+  // Pagination
   // ==========================
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Change to 5 after testing
-  const itemsPerPage = 2;
+  const itemsPerPage = 5;
+
+  // ==========================
+  // API Operation States
+  // ==========================
+
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ==========================
   // Reset Page When Filters Change
@@ -121,11 +79,7 @@ function MembershipPlans() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    search,
-    status,
-    duration,
-  ]);
+  }, [search, status, duration]);
 
   // ==========================
   // Add Plan
@@ -150,6 +104,8 @@ function MembershipPlans() {
   // ==========================
 
   const handleCloseModal = () => {
+    if (saving) return;
+
     setShowModal(false);
     setSelectedPlan(null);
   };
@@ -158,31 +114,31 @@ function MembershipPlans() {
   // Save Plan
   // ==========================
 
-  const handleSavePlan = (planData) => {
-    if (selectedPlan) {
-      setPlans((prev) =>
-        prev.map((plan) =>
-          plan.id === selectedPlan.id
-            ? {
-                ...selectedPlan,
-                ...planData,
-              }
-            : plan
-        )
+  const handleSavePlan = async (planData) => {
+    try {
+      setSaving(true);
+
+      if (selectedPlan) {
+        await updatePlan(
+          selectedPlan.id,
+          planData
+        );
+      } else {
+        await addPlan(planData);
+      }
+
+      setShowModal(false);
+      setSelectedPlan(null);
+    } catch (error) {
+      console.error(
+        "Save membership plan error:",
+        error
       );
-    } else {
-      const newPlan = {
-        id: Date.now(),
-        ...planData,
-      };
 
-      setPlans((prev) => [
-        ...prev,
-        newPlan,
-      ]);
+      // Keep modal open when API fails
+    } finally {
+      setSaving(false);
     }
-
-    handleCloseModal();
   };
 
   // ==========================
@@ -212,9 +168,7 @@ function MembershipPlans() {
       (plan) => plan.id === id
     );
 
-    if (!plan) {
-      return;
-    }
+    if (!plan) return;
 
     setPlanToDelete(plan);
     setShowDeleteDialog(true);
@@ -224,20 +178,24 @@ function MembershipPlans() {
   // Confirm Delete
   // ==========================
 
-  const confirmDeletePlan = () => {
-    if (!planToDelete) {
-      return;
+  const confirmDeletePlan = async () => {
+    if (!planToDelete) return;
+
+    try {
+      setDeleting(true);
+
+      await deletePlan(planToDelete.id);
+
+      setPlanToDelete(null);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error(
+        "Delete membership plan error:",
+        error
+      );
+    } finally {
+      setDeleting(false);
     }
-
-    setPlans((prev) =>
-      prev.filter(
-        (plan) =>
-          plan.id !== planToDelete.id
-      )
-    );
-
-    setPlanToDelete(null);
-    setShowDeleteDialog(false);
   };
 
   // ==========================
@@ -245,6 +203,8 @@ function MembershipPlans() {
   // ==========================
 
   const cancelDeletePlan = () => {
+    if (deleting) return;
+
     setPlanToDelete(null);
     setShowDeleteDialog(false);
   };
@@ -268,13 +228,18 @@ function MembershipPlans() {
     const searchTerm =
       search.toLowerCase().trim();
 
+    const planName =
+      (plan.name || "").toLowerCase();
+
+    const description =
+      (plan.description || "").toLowerCase();
+
     const matchesSearch =
-      plan.name
-        .toLowerCase()
-        .includes(searchTerm) ||
-      plan.description
-        .toLowerCase()
-        .includes(searchTerm);
+      planName.includes(searchTerm) ||
+      description.includes(searchTerm);
+
+    const planDuration =
+      `${plan.duration_months} Months`;
 
     const matchesStatus =
       status === "All" ||
@@ -282,7 +247,7 @@ function MembershipPlans() {
 
     const matchesDuration =
       duration === "All" ||
-      plan.duration === duration;
+      duration === planDuration;
 
     return (
       matchesSearch &&
@@ -292,31 +257,22 @@ function MembershipPlans() {
   });
 
   // ==========================
-  // Pagination Calculation
+  // Pagination
   // ==========================
 
-  const totalItems =
-    filteredPlans.length;
+  const totalItems = filteredPlans.length;
 
   const totalPages = Math.ceil(
     totalItems / itemsPerPage
   );
 
-  // ==========================
-  // Current Page Data
-  // ==========================
-
   const startIndex =
-    (currentPage - 1) *
-    itemsPerPage;
-
-  const endIndex =
-    startIndex + itemsPerPage;
+    (currentPage - 1) * itemsPerPage;
 
   const paginatedPlans =
     filteredPlans.slice(
       startIndex,
-      endIndex
+      startIndex + itemsPerPage
     );
 
   // ==========================
@@ -330,24 +286,51 @@ function MembershipPlans() {
     ) {
       setCurrentPage(totalPages);
     }
-  }, [
-    currentPage,
-    totalPages,
-  ]);
+  }, [currentPage, totalPages]);
+
+  // ==========================
+  // Loading
+  // ==========================
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg font-semibold text-gray-600">
+          Loading membership plans...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Header */}
+      {/* ==========================
+          Error Message
+      ========================== */}
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-300 bg-red-100 px-4 py-3 text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* ==========================
+          Header
+      ========================== */}
 
       <PlanHeader
         onAddPlan={handleAddPlan}
       />
 
-      {/* Statistics */}
+      {/* ==========================
+          Statistics
+      ========================== */}
 
       <PlanStats plans={plans} />
 
-      {/* Filters */}
+      {/* ==========================
+          Filters
+      ========================== */}
 
       <PlanFilter
         search={search}
@@ -360,7 +343,9 @@ function MembershipPlans() {
         onReset={handleResetFilters}
       />
 
-      {/* Plans Table */}
+      {/* ==========================
+          Plans Table
+      ========================== */}
 
       <PlanTable
         plans={paginatedPlans}
@@ -369,7 +354,9 @@ function MembershipPlans() {
         onDelete={handleDeletePlan}
       />
 
-      {/* Pagination */}
+      {/* ==========================
+          Pagination
+      ========================== */}
 
       <div className="flex justify-center items-center gap-4 mt-6 mb-6">
         <Pagination
@@ -379,7 +366,9 @@ function MembershipPlans() {
         />
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* ==========================
+          Add / Edit Modal
+      ========================== */}
 
       <Modal
         isOpen={showModal}
@@ -391,13 +380,16 @@ function MembershipPlans() {
         onClose={handleCloseModal}
       >
         <PlanForm
-        onSave={handleSavePlan}
-        initialData={selectedPlan}
-        existingPlans={plans}
-       />
+          onSave={handleSavePlan}
+          initialData={selectedPlan}
+          existingPlans={plans}
+          loading={saving}
+        />
       </Modal>
 
-      {/* View Plan Modal */}
+      {/* ==========================
+          View Plan Modal
+      ========================== */}
 
       <Modal
         isOpen={showViewModal}
@@ -410,7 +402,9 @@ function MembershipPlans() {
         />
       </Modal>
 
-      {/* Delete Confirmation */}
+      {/* ==========================
+          Delete Confirmation
+      ========================== */}
 
       <ConfirmDialog
         isOpen={showDeleteDialog}
@@ -422,6 +416,7 @@ function MembershipPlans() {
         }
         onConfirm={confirmDeletePlan}
         onCancel={cancelDeletePlan}
+        loading={deleting}
       />
     </div>
   );
