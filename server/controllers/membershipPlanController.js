@@ -8,15 +8,26 @@ const getMembershipPlans = async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        id,
-        name,
-        duration_months,
-        price,
-        description,
-        status,
-        created_at
-      FROM membership_plans
-      ORDER BY id DESC
+  mp.id,
+  mp.name,
+  mp.duration_months,
+  mp.price,
+  mp.description,
+  mp.status,
+  mp.created_at,
+  COUNT(m.id)::integer AS members
+FROM membership_plans mp
+LEFT JOIN members m
+  ON m.plan_id = mp.id
+GROUP BY
+  mp.id,
+  mp.name,
+  mp.duration_months,
+  mp.price,
+  mp.description,
+  mp.status,
+  mp.created_at
+ORDER BY mp.id DESC
     `);
 
     res.status(200).json(result.rows);
@@ -44,15 +55,26 @@ const getMembershipPlanById = async (req, res) => {
     const result = await pool.query(
       `
       SELECT
-        id,
-        name,
-        duration_months,
-        price,
-        description,
-        status,
-        created_at
-      FROM membership_plans
-      WHERE id = $1
+  mp.id,
+  mp.name,
+  mp.duration_months,
+  mp.price,
+  mp.description,
+  mp.status,
+  mp.created_at,
+  COUNT(m.id)::integer AS members
+FROM membership_plans mp
+LEFT JOIN members m
+  ON m.plan_id = mp.id
+WHERE mp.id = $1
+GROUP BY
+  mp.id,
+  mp.name,
+  mp.duration_months,
+  mp.price,
+  mp.description,
+  mp.status,
+  mp.created_at
       `,
       [id]
     );
