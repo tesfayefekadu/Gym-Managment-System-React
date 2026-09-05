@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import AttendanceHeader from "../components/attendance/AttendanceHeader";
 import AttendanceStats from "../components/attendance/AttendanceStats";
@@ -9,273 +9,245 @@ import AttendanceFilter from "../components/attendance/AttendanceFilter";
 import Modal from "../components/common/Modal";
 import Pagination from "../components/common/Pagination";
 
+import useAttendance from "../hooks/useAttendance";
+import { getMembers } from "../services/memberService";
+
 function Attendance() {
-  // ==========================
-  // Members
-  // ==========================
+  // ========================================
+  // ATTENDANCE API
+  // ========================================
 
-  const [members] = useState([
-    {
-      id: 1,
-      name: "Tesfaye",
-      phone: "0911223344",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Abel",
-      phone: "0912334455",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "John",
-      phone: "0913445566",
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "Michael",
-      phone: "0914556677",
-      status: "Active",
-    },
-  ]);
+  const {
+    attendance,
+    loading,
+    error,
+    addAttendance,
+    updateAttendance,
+  } = useAttendance();
 
-  // ==========================
-  // Attendance Data
-  // ==========================
+  // ========================================
+  // MEMBERS
+  // ========================================
 
-  const [attendance, setAttendance] =
-    useState([
-      {
-        id: 1,
-        memberId: 1,
-        memberName: "Tesfaye",
-        memberPhone: "0911223344",
-        date: "2026-08-14",
-        checkIn: "08:30",
-        checkOut: "10:15",
-        status: "Present",
-      },
-      {
-        id: 2,
-        memberId: 2,
-        memberName: "Abel",
-        memberPhone: "0912334455",
-        date: "2026-08-14",
-        checkIn: "09:15",
-        checkOut: "11:00",
-        status: "Present",
-      },
-      {
-        id: 3,
-        memberId: 3,
-        memberName: "John",
-        memberPhone: "0913445566",
-        date: "2026-08-14",
-        checkIn: "17:30",
-        checkOut: "",
-        status: "Present",
-      },
-      {
-        id: 4,
-        memberId: 4,
-        memberName: "Michael",
-        memberPhone: "0914556677",
-        date: "2026-08-13",
-        checkIn: "",
-        checkOut: "",
-        status: "Absent",
-      },
-      {
-        id: 5,
-        memberId: 1,
-        memberName: "Tesfaye",
-        memberPhone: "0911223344",
-        date: "2026-08-12",
-        checkIn: "08:45",
-        checkOut: "10:30",
-        status: "Present",
-      },
-      {
-        id: 6,
-        memberId: 2,
-        memberName: "Abel",
-        memberPhone: "0912334455",
-        date: "2026-08-11",
-        checkIn: "09:00",
-        checkOut: "10:45",
-        status: "Present",
-      },
-      {
-        id: 7,
-        memberId: 3,
-        memberName: "John",
-        memberPhone: "0913445566",
-        date: "2026-08-10",
-        checkIn: "09:35",
-        checkOut: "11:00",
-        status: "Late",
-      },
-      {
-        id: 8,
-        memberId: 4,
-        memberName: "Michael",
-        memberPhone: "0914556677",
-        date: "2026-08-09",
-        checkIn: "08:20",
-        checkOut: "10:00",
-        status: "Present",
-      },
-      {
-        id: 9,
-        memberId: 1,
-        memberName: "Tesfaye",
-        memberPhone: "0911223344",
-        date: "2026-08-08",
-        checkIn: "08:40",
-        checkOut: "10:20",
-        status: "Present",
-      },
-      {
-        id: 10,
-        memberId: 2,
-        memberName: "Abel",
-        memberPhone: "0912334455",
-        date: "2026-08-07",
-        checkIn: "",
-        checkOut: "",
-        status: "Absent",
-      },
-    ]);
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [membersError, setMembersError] = useState("");
 
-  // ==========================
-  // Search
-  // ==========================
+  // ========================================
+  // FORM / DELETE STATES
+  // ========================================
 
-  const [search, setSearch] =
-    useState("");
+  const [saving, setSaving] = useState(false);
 
-  // ==========================
-  // Date Filter
-  // ==========================
+  // ========================================
+  // SEARCH
+  // ========================================
 
-  const [dateFilter, setDateFilter] =
-    useState("all");
+  const [search, setSearch] = useState("");
 
-  const [startDate, setStartDate] =
-    useState("");
+  // ========================================
+  // DATE FILTER
+  // ========================================
 
-  const [endDate, setEndDate] =
-    useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // ==========================
-  // Status Filter
-  // ==========================
+  // ========================================
+  // STATUS FILTER
+  // ========================================
 
-  const [status, setStatus] =
-    useState("All");
+  const [status, setStatus] = useState("All");
 
-  // ==========================
-  // Pagination
-  // ==========================
+  // ========================================
+  // PAGINATION
+  // ========================================
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const recordsPerPage = 5;
 
-  // ==========================
-  // Check-In Modal
-  // ==========================
+  // ========================================
+  // CHECK-IN MODAL
+  // ========================================
 
   const [
     showCheckInModal,
     setShowCheckInModal,
   ] = useState(false);
 
-  // ==========================
-  // Open Check-In
-  // ==========================
+  // ========================================
+  // LOAD MEMBERS
+  // ========================================
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setMembersLoading(true);
+        setMembersError("");
+
+        const data = await getMembers();
+
+        setMembers(data);
+      } catch (error) {
+        console.error(
+          "Failed to fetch members:",
+          error
+        );
+
+        setMembersError(
+          error.message || "Failed to load members"
+        );
+      } finally {
+        setMembersLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+  // ========================================
+  // OPEN CHECK-IN
+  // ========================================
 
   const handleCheckIn = () => {
     setShowCheckInModal(true);
   };
 
-  // ==========================
-  // Close Check-In
-  // ==========================
+  // ========================================
+  // CLOSE CHECK-IN
+  // ========================================
 
   const handleCloseCheckIn = () => {
+    if (saving) return;
+
     setShowCheckInModal(false);
   };
 
-  // ==========================
-  // Save Check-In
-  // ==========================
+  // ========================================
+  // SAVE CHECK-IN
+  // ========================================
 
-  const handleSaveCheckIn = (
+  const handleSaveCheckIn = async (
     attendanceData
   ) => {
-    const selectedMember =
-      members.find(
-        (member) =>
-          member.id ===
-          attendanceData.memberId
+    try {
+      setSaving(true);
+
+      /*
+       * AttendanceForm currently uses:
+       *
+       * memberId
+       * date
+       * checkIn
+       * checkOut
+       * status
+       *
+       * PostgreSQL API expects:
+       *
+       * member_id
+       * attendance_date
+       * check_in
+       * check_out
+       * status
+       */
+
+      const apiData = {
+        member_id: Number(attendanceData.memberId),
+
+        attendance_date:
+          attendanceData.date || null,
+
+        check_in:
+          attendanceData.checkIn || null,
+
+        check_out:
+          attendanceData.checkOut || null,
+
+        status:
+          attendanceData.status || "Present",
+      };
+
+      await addAttendance(apiData);
+
+      setCurrentPage(1);
+      setShowCheckInModal(false);
+    } catch (error) {
+      console.error(
+        "Failed to save attendance:",
+        error
       );
 
-    const newAttendance = {
-      id: Date.now(),
-      memberPhone:
-        selectedMember?.phone || "",
-      ...attendanceData,
-    };
-
-    setAttendance((prev) => [
-      newAttendance,
-      ...prev,
-    ]);
-
-    setCurrentPage(1);
-
-    setShowCheckInModal(false);
+      // Hook already stores the error.
+      // Keep modal open so user can correct the form.
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ==========================
-  // Check-Out
-  // ==========================
+  // ========================================
+  // CHECK-OUT
+  // ========================================
 
-  const handleCheckOut = (attendanceId) => {
-    const now = new Date();
+  const handleCheckOut = async (attendanceId) => {
+    try {
+      setSaving(true);
 
-    const checkOutTime =
-      now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
+      const record = attendance.find(
+        (item) => item.id === attendanceId
+      );
 
-    setAttendance((prev) =>
-      prev.map((record) => {
-        if (record.id !== attendanceId) {
-          return record;
-        }
+      if (!record) {
+        return;
+      }
 
-        if (record.checkOut) {
-          return record;
-        }
+      // Already checked out
+      if (record.check_out) {
+        return;
+      }
 
-        return {
-          ...record,
-          checkOut: checkOutTime,
-        };
-      })
-    );
+      const now = new Date();
+
+      const checkOutTime =
+        now.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+
+      const apiData = {
+        member_id: Number(record.member_id),
+
+        attendance_date:
+          record.attendance_date,
+
+        check_in:
+          record.check_in || null,
+
+        check_out:
+          checkOutTime,
+
+        status:
+          record.status || "Present",
+      };
+
+      await updateAttendance(
+        attendanceId,
+        apiData
+      );
+    } catch (error) {
+      console.error(
+        "Failed to check out member:",
+        error
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ==========================
-  // Reset Filters
-  // ==========================
+  // ========================================
+  // RESET FILTERS
+  // ========================================
 
   const handleResetFilters = () => {
     setSearch("");
@@ -286,37 +258,71 @@ function Attendance() {
     setCurrentPage(1);
   };
 
-  // ==========================
-  // Filter Attendance
-  // ==========================
+// ========================================
+// CONVERT API DATA TO UI FORMAT
+// ========================================
 
-  const filteredAttendance =
-    attendance.filter((record) => {
+const attendanceForUI = attendance.map((record) => ({
+  id: record.id,
 
-      // --------------------------
-      // Search
-      // --------------------------
+  memberId: record.member_id,
+  memberName: record.member_name || "",
+  memberPhone: record.member_phone || "",
+
+  date: record.attendance_date || "",
+
+  checkIn: record.check_in || "",
+  checkOut: record.check_out || "",
+
+  status: record.status || "Present",
+}));
+
+
+
+
+
+  // ========================================
+  // FILTER ATTENDANCE
+  // ========================================
+
+ const filteredAttendance =
+  attendanceForUI.filter((record) => {
+      // ------------------------------------
+      // SEARCH
+      // ------------------------------------
 
       const searchValue =
         search.trim().toLowerCase();
 
+      const memberName =
+        record.member_name || "";
+
+      const memberPhone =
+        record.member_phone || "";
+
+      const memberId =
+        record.member_id ?? "";
+
       const matchesSearch =
         !searchValue ||
-        record.memberName
+        memberName
           .toLowerCase()
           .includes(searchValue) ||
-        record.memberPhone
-          ?.toLowerCase()
+        memberPhone
+          .toLowerCase()
           .includes(searchValue) ||
-        String(record.memberId)
+        String(memberId)
           .toLowerCase()
           .includes(searchValue);
 
-      // --------------------------
-      // Date
-      // --------------------------
+      // ------------------------------------
+      // DATE
+      // ------------------------------------
 
       let matchesDate = true;
+
+      const attendanceDate =
+        record.attendance_date;
 
       if (dateFilter === "today") {
         const today =
@@ -325,31 +331,31 @@ function Attendance() {
             .split("T")[0];
 
         matchesDate =
-          record.date === today;
+          attendanceDate === today;
       }
 
       if (dateFilter === "specific") {
         matchesDate =
           !startDate ||
-          record.date === startDate;
+          attendanceDate === startDate;
       }
 
       if (dateFilter === "range") {
         const afterStart =
           !startDate ||
-          record.date >= startDate;
+          attendanceDate >= startDate;
 
         const beforeEnd =
           !endDate ||
-          record.date <= endDate;
+          attendanceDate <= endDate;
 
         matchesDate =
           afterStart && beforeEnd;
       }
 
-      // --------------------------
-      // Status
-      // --------------------------
+      // ------------------------------------
+      // STATUS
+      // ------------------------------------
 
       const matchesStatus =
         status === "All" ||
@@ -362,9 +368,9 @@ function Attendance() {
       );
     });
 
-  // ==========================
-  // Pagination Calculation
-  // ==========================
+  // ========================================
+  // PAGINATION
+  // ========================================
 
   const totalPages = Math.ceil(
     filteredAttendance.length /
@@ -381,32 +387,57 @@ function Attendance() {
       startIndex + recordsPerPage
     );
 
-  // ==========================
-  // Return
-  // ==========================
+  // ========================================
+  // RETURN
+  // ========================================
 
   return (
     <div>
-
-      {/* ==========================
-          Header
-      ========================== */}
+      {/* ==================================
+          HEADER
+      ================================== */}
 
       <AttendanceHeader
         onCheckIn={handleCheckIn}
       />
 
-      {/* ==========================
-          Statistics
-      ========================== */}
+      {/* ==================================
+          ERROR
+      ================================== */}
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700">
+          {error}
+        </div>
+      )}
+
+      {membersError && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700">
+          {membersError}
+        </div>
+      )}
+
+      {/* ==================================
+          LOADING
+      ================================== */}
+
+      {loading && (
+        <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-blue-700">
+          Loading attendance...
+        </div>
+      )}
+
+      {/* ==================================
+          STATISTICS
+      ================================== */}
 
       <AttendanceStats
         attendance={filteredAttendance}
       />
 
-      {/* ==========================
-          Filters
-      ========================== */}
+      {/* ==================================
+          FILTERS
+      ================================== */}
 
       <AttendanceFilter
         search={search}
@@ -438,45 +469,50 @@ function Attendance() {
         total={filteredAttendance.length}
       />
 
-      {/* ==========================
-          Attendance Table
-      ========================== */}
+      {/* ==================================
+          ATTENDANCE TABLE
+      ================================== */}
 
       <AttendanceTable
         attendance={paginatedAttendance}
         onCheckOut={handleCheckOut}
+        loading={saving}
       />
 
-      {/* ==========================
-          Pagination
-      ========================== */}
+      {/* ==================================
+          PAGINATION
+      ================================== */}
 
       <div className="mt-6 flex justify-center">
-
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
-
       </div>
 
-      {/* ==========================
-          Check-In Modal
-      ========================== */}
+      {/* ==================================
+          CHECK-IN MODAL
+      ================================== */}
 
       <Modal
         isOpen={showCheckInModal}
         title="Member Check In"
         onClose={handleCloseCheckIn}
       >
-        <AttendanceForm
-          members={members}
-          attendance={attendance}
-          onSave={handleSaveCheckIn}
-        />
+        {membersLoading ? (
+          <div className="py-8 text-center text-gray-500">
+            Loading members...
+          </div>
+        ) : (
+          <AttendanceForm
+            members={members}
+            attendance={attendance}
+            onSave={handleSaveCheckIn}
+            loading={saving}
+          />
+        )}
       </Modal>
-
     </div>
   );
 }
