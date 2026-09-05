@@ -4,36 +4,73 @@ import Button from "../common/Button";
 import SelectField from "../common/SelectField";
 
 function AttendanceForm({
-  members,
-  attendance,
+  members = [],
+  attendance = [],
   onSave,
+  loading = false,
 }) {
-  const [memberId, setMemberId] =
-    useState("");
+  const [memberId, setMemberId] = useState("");
+  const [error, setError] = useState("");
 
-  const [error, setError] =
-    useState("");
+  // ========================================
+  // GET LOCAL DATE
+  // ========================================
+
+  const getLocalDate = () => {
+    const now = new Date();
+
+    const year = now.getFullYear();
+
+    const month = String(
+      now.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+      now.getDate()
+    ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  // ========================================
+  // GET LOCAL TIME
+  // ========================================
+
+  const getLocalTime = () => {
+    const now = new Date();
+
+    return now.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
+
+  // ========================================
+  // SUBMIT
+  // ========================================
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (loading) return;
+
     setError("");
 
-    // ==========================
-    // Validate Member
-    // ==========================
+    // ======================================
+    // VALIDATE MEMBER
+    // ======================================
 
     if (!memberId) {
       setError("Please select a member.");
       return;
     }
 
-    const selectedMember =
-      members.find(
-        (member) =>
-          String(member.id) ===
-          String(memberId)
-      );
+    const selectedMember = members.find(
+      (member) =>
+        String(member.id) ===
+        String(memberId)
+    );
 
     if (!selectedMember) {
       setError(
@@ -42,34 +79,38 @@ function AttendanceForm({
       return;
     }
 
-    // ==========================
-    // Current Date & Time
-    // ==========================
+    // ======================================
+    // CURRENT DATE & TIME
+    // ======================================
 
-    const now = new Date();
+    const date = getLocalDate();
+    const time = getLocalTime();
 
-    const date =
-      now.toISOString().split("T")[0];
-
-    const time =
-      now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-
-    // ==========================
-    // Duplicate Check-In
-    // ==========================
+    // ======================================
+    // DUPLICATE CHECK-IN
+    // ======================================
 
     const alreadyCheckedIn =
-      attendance.some(
-        (record) =>
-          record.memberId ===
-            selectedMember.id &&
-          record.date === date &&
-          record.checkIn
-      );
+      attendance.some((record) => {
+        const recordMemberId =
+          record.member_id ??
+          record.memberId;
+
+        const recordDate =
+          record.attendance_date ??
+          record.date;
+
+        const recordCheckIn =
+          record.check_in ??
+          record.checkIn;
+
+        return (
+          String(recordMemberId) ===
+            String(selectedMember.id) &&
+          recordDate === date &&
+          recordCheckIn
+        );
+      });
 
     if (alreadyCheckedIn) {
       setError(
@@ -79,9 +120,9 @@ function AttendanceForm({
       return;
     }
 
-    // ==========================
-    // Create Attendance
-    // ==========================
+    // ======================================
+    // CREATE ATTENDANCE DATA
+    // ======================================
 
     const attendanceData = {
       memberId: selectedMember.id,
@@ -92,8 +133,16 @@ function AttendanceForm({
       status: "Present",
     };
 
+    // ======================================
+    // SEND TO PARENT
+    // ======================================
+
     onSave(attendanceData);
   };
+
+  // ========================================
+  // RETURN
+  // ========================================
 
   return (
     <form
@@ -126,6 +175,10 @@ function AttendanceForm({
         ]}
       />
 
+      {/* ==================================
+          ERROR
+      ================================== */}
+
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-3">
           <p className="text-sm text-red-600">
@@ -134,12 +187,19 @@ function AttendanceForm({
         </div>
       )}
 
+      {/* ==================================
+          ACTION
+      ================================== */}
+
       <div className="flex justify-end pt-4 border-t">
         <Button
           type="submit"
           variant="primary"
+          disabled={loading}
         >
-          Confirm Check In
+          {loading
+            ? "Checking In..."
+            : "Confirm Check In"}
         </Button>
       </div>
     </form>
