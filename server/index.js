@@ -7,6 +7,7 @@ const memberRoutes = require("./routes/memberRoutes");
 const trainerRoutes = require("./routes/trainerRoutes");
 const membershipPlanRoutes = require("./routes/membershipPlanRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -21,6 +22,7 @@ app.use("/api/members", memberRoutes);
 app.use("/api/trainers",trainerRoutes);
 app.use("/api/membership-plans",membershipPlanRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/payments", paymentRoutes);
 
 
 // Test route

@@ -7,8 +7,9 @@ import SelectField from "../common/SelectField";
 function PaymentForm({
   onSave,
   initialData,
-  members,
-  membershipPlans,
+  members = [],
+  membershipPlans = [],
+  loading = false,
 }) {
   const emptyPayment = {
     memberId: "",
@@ -18,8 +19,9 @@ function PaymentForm({
     amount: "",
     paymentDate: "",
     method: "Cash",
-    status: "Paid",
+    status: "Completed",
     reference: "",
+    notes: "",
   };
 
   const [formData, setFormData] =
@@ -27,22 +29,59 @@ function PaymentForm({
 
   const [errors, setErrors] = useState({});
 
+  // ========================================
+  // LOAD INITIAL DATA
+  // ========================================
+
   useEffect(() => {
     if (initialData) {
       setFormData({
-        memberId: initialData.memberId || "",
-        memberName: initialData.memberName || "",
-        planId: initialData.planId || "",
-        plan: initialData.plan || "",
-        amount: initialData.amount || "",
+        memberId:
+          initialData.member_id ??
+          initialData.memberId ??
+          "",
+
+        memberName:
+          initialData.member_name ??
+          initialData.memberName ??
+          "",
+
+        planId:
+          initialData.plan_id ??
+          initialData.planId ??
+          "",
+
+        plan:
+          initialData.plan ??
+          "",
+
+        amount:
+          initialData.amount ?? "",
+
         paymentDate:
-          initialData.paymentDate || "",
+          initialData.payment_date ??
+          initialData.paymentDate ??
+          "",
+
         method:
-          initialData.method || "Cash",
+          initialData.payment_method ??
+          initialData.method ??
+          "Cash",
+
         status:
-          initialData.status || "Paid",
+          initialData.status === "Paid"
+            ? "Completed"
+            : initialData.status ||
+              "Completed",
+
         reference:
-          initialData.reference || "",
+          initialData.reference_number ??
+          initialData.reference ??
+          "",
+
+        notes:
+          initialData.notes ??
+          "",
       });
     } else {
       setFormData(emptyPayment);
@@ -51,9 +90,9 @@ function PaymentForm({
     setErrors({});
   }, [initialData]);
 
-  // =====================================================
+  // ========================================
   // HANDLE INPUT
-  // =====================================================
+  // ========================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,9 +108,9 @@ function PaymentForm({
     }));
   };
 
-  // =====================================================
-  // MEMBER
-  // =====================================================
+  // ========================================
+  // MEMBER CHANGE
+  // ========================================
 
   const handleMemberChange = (e) => {
     const memberId = e.target.value;
@@ -95,9 +134,9 @@ function PaymentForm({
     }));
   };
 
-  // =====================================================
-  // PLAN
-  // =====================================================
+  // ========================================
+  // PLAN CHANGE
+  // ========================================
 
   const handlePlanChange = (e) => {
     const planId = e.target.value;
@@ -115,7 +154,7 @@ function PaymentForm({
       plan:
         selectedPlan?.name || "",
       amount:
-        selectedPlan?.price || "",
+        selectedPlan?.price ?? "",
     }));
 
     setErrors((previous) => ({
@@ -125,9 +164,9 @@ function PaymentForm({
     }));
   };
 
-  // =====================================================
+  // ========================================
   // VALIDATION
-  // =====================================================
+  // ========================================
 
   const validateForm = () => {
     const newErrors = {};
@@ -142,11 +181,19 @@ function PaymentForm({
         "Please select a membership plan.";
     }
 
-    if (!formData.amount) {
+    const amount = Number(
+      formData.amount
+    );
+
+    if (
+      formData.amount === "" ||
+      formData.amount === null
+    ) {
       newErrors.amount =
         "Amount is required.";
     } else if (
-      Number(formData.amount) <= 0
+      Number.isNaN(amount) ||
+      amount <= 0
     ) {
       newErrors.amount =
         "Amount must be greater than 0.";
@@ -169,7 +216,7 @@ function PaymentForm({
 
     if (
       formData.reference &&
-      formData.reference.length < 3
+      formData.reference.trim().length < 3
     ) {
       newErrors.reference =
         "Reference must contain at least 3 characters.";
@@ -177,33 +224,65 @@ function PaymentForm({
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    return (
+      Object.keys(newErrors).length === 0
+    );
   };
 
-  // =====================================================
+  // ========================================
   // SUBMIT
-  // =====================================================
+  // ========================================
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const isValid = validateForm();
+    if (loading) return;
 
-    if (!isValid) {
+    if (!validateForm()) {
       return;
     }
 
-    onSave({
-      ...formData,
+    // ======================================
+    // API DATA
+    // ======================================
+
+    const paymentData = {
+      member_id: Number(formData.memberId),
+
       amount: Number(formData.amount),
-    });
+
+      payment_date:
+        formData.paymentDate,
+
+      payment_method:
+        formData.method,
+
+      status:
+        formData.status,
+
+      reference_number:
+        formData.reference.trim() || null,
+
+      notes:
+        formData.notes.trim() || null,
+    };
+
+    onSave(paymentData);
   };
+
+  // ========================================
+  // RETURN
+  // ========================================
 
   return (
     <form
       onSubmit={handleSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-5"
     >
+      {/* ==================================
+          MEMBER
+      ================================== */}
+
       <div>
         <SelectField
           label="Member"
@@ -229,6 +308,10 @@ function PaymentForm({
           </p>
         )}
       </div>
+
+      {/* ==================================
+          MEMBERSHIP PLAN
+      ================================== */}
 
       <div>
         <SelectField
@@ -261,6 +344,10 @@ function PaymentForm({
         )}
       </div>
 
+      {/* ==================================
+          AMOUNT
+      ================================== */}
+
       <div>
         <InputField
           label="Amount"
@@ -278,6 +365,10 @@ function PaymentForm({
         )}
       </div>
 
+      {/* ==================================
+          PAYMENT DATE
+      ================================== */}
+
       <div>
         <InputField
           label="Payment Date"
@@ -294,6 +385,10 @@ function PaymentForm({
           </p>
         )}
       </div>
+
+      {/* ==================================
+          PAYMENT METHOD
+      ================================== */}
 
       <div>
         <SelectField
@@ -328,6 +423,10 @@ function PaymentForm({
         )}
       </div>
 
+      {/* ==================================
+          STATUS
+      ================================== */}
+
       <div>
         <SelectField
           label="Payment Status"
@@ -336,16 +435,20 @@ function PaymentForm({
           onChange={handleChange}
           options={[
             {
-              value: "Paid",
-              label: "Paid",
+              value: "Completed",
+              label: "Completed",
             },
             {
               value: "Pending",
               label: "Pending",
             },
             {
-              value: "Cancelled",
-              label: "Cancelled",
+              value: "Failed",
+              label: "Failed",
+            },
+            {
+              value: "Refunded",
+              label: "Refunded",
             },
           ]}
         />
@@ -356,6 +459,10 @@ function PaymentForm({
           </p>
         )}
       </div>
+
+      {/* ==================================
+          REFERENCE
+      ================================== */}
 
       <div>
         <InputField
@@ -373,12 +480,38 @@ function PaymentForm({
         )}
       </div>
 
+      {/* ==================================
+          NOTES
+      ================================== */}
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Notes
+        </label>
+
+        <textarea
+          name="notes"
+          value={formData.notes}
+          onChange={handleChange}
+          rows="3"
+          placeholder="Optional notes..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* ==================================
+          SAVE
+      ================================== */}
+
       <div className="md:col-span-2 flex justify-end">
         <Button
           type="submit"
           variant="primary"
+          disabled={loading}
         >
-          {initialData
+          {loading
+            ? "Saving..."
+            : initialData
             ? "Update Payment"
             : "Save Payment"}
         </Button>
