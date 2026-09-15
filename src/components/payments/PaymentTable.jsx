@@ -2,7 +2,7 @@ import Table from "../common/Table";
 import PaymentRow from "./PaymentRow";
 
 function PaymentTable({
-  payments,
+  payments = [],
   onEdit,
   onDelete,
 }) {
