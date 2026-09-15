@@ -1,11 +1,24 @@
-function PaymentStats({ payments }) {
+function PaymentStats({ payments = [] }) {
+  // =====================================================
+  // TOTAL PAYMENTS
+  // =====================================================
+
   const totalPayments =
     payments.length;
 
-  const paidPayments = payments.filter(
-    (payment) =>
-      payment.status === "Paid"
-  ).length;
+  // =====================================================
+  // COMPLETED PAYMENTS
+  // =====================================================
+
+  const completedPayments =
+    payments.filter(
+      (payment) =>
+        payment.status === "Completed"
+    ).length;
+
+  // =====================================================
+  // PENDING PAYMENTS
+  // =====================================================
 
   const pendingPayments =
     payments.filter(
@@ -13,44 +26,69 @@ function PaymentStats({ payments }) {
         payment.status === "Pending"
     ).length;
 
+  // =====================================================
+  // TOTAL REVENUE
+  // =====================================================
+  //
+  // Only Completed payments are counted as revenue.
+  //
+  // Pending, Failed, and Refunded payments
+  // are not included.
+  // =====================================================
+
   const totalRevenue =
     payments
       .filter(
         (payment) =>
-          payment.status === "Paid"
+          payment.status === "Completed"
       )
       .reduce(
         (total, payment) =>
-          total + Number(payment.amount),
+          total +
+          Number(payment.amount || 0),
         0
       );
+
+  // =====================================================
+  // STATISTICS CARDS
+  // =====================================================
 
   const cards = [
     {
       title: "Total Payments",
       value: totalPayments,
-      description: "All transactions",
+      description:
+        "All transactions",
     },
+
     {
       title: "Total Revenue",
       value: `${totalRevenue.toLocaleString()} ETB`,
-      description: "Paid transactions",
+      description:
+        "Completed transactions",
     },
+
     {
-      title: "Paid",
-      value: paidPayments,
-      description: "Completed payments",
+      title: "Completed",
+      value: completedPayments,
+      description:
+        "Completed payments",
     },
+
     {
       title: "Pending",
       value: pendingPayments,
-      description: "Pending payments",
+      description:
+        "Pending payments",
     },
   ];
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-
       {cards.map((card) => (
         <div
           key={card.title}
@@ -69,7 +107,6 @@ function PaymentStats({ payments }) {
           </p>
         </div>
       ))}
-
     </div>
   );
 }
