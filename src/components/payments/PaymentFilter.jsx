@@ -77,16 +77,20 @@ function PaymentFilter({
               label: "All Statuses",
             },
             {
-              value: "Paid",
-              label: "Paid",
+              value: "Completed",
+              label: "Completed",
             },
             {
               value: "Pending",
               label: "Pending",
             },
             {
-              value: "Cancelled",
-              label: "Cancelled",
+              value: "Failed",
+              label: "Failed",
+            },
+            {
+              value: "Refunded",
+              label: "Refunded",
             },
           ]}
         />
