@@ -1,44 +1,23 @@
-const API_URL =
-  `${import.meta.env.VITE_API_URL}/api/attendance`;
-
-// ========================================
-// HANDLE API RESPONSE
-// ========================================
-const handleResponse = async (response) => {
-  let data = null;
-
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      data?.message ||
-      data?.error ||
-      `Request failed with status ${response.status}`;
-
-    throw new Error(message);
-  }
-
-  return data;
-};
+import API_URL, { handleResponse } from "./api";
 
 // ========================================
 // GET ALL ATTENDANCE
 // ========================================
+
 export const getAttendance = async () => {
-  const response = await fetch(API_URL);
+  const response = await fetch(`${API_URL}/attendance`);
 
   return await handleResponse(response);
 };
 
 // ========================================
-// GET ATTENDANCE BY ID
+// GET SINGLE ATTENDANCE
 // ========================================
+
 export const getAttendanceById = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`);
+  const response = await fetch(
+    `${API_URL}/attendance/${id}`
+  );
 
   return await handleResponse(response);
 };
@@ -46,14 +25,20 @@ export const getAttendanceById = async (id) => {
 // ========================================
 // CREATE ATTENDANCE
 // ========================================
+
 export const createAttendance = async (attendanceData) => {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(attendanceData),
-  });
+  const response = await fetch(
+    `${API_URL}/attendance`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(attendanceData),
+    }
+  );
 
   return await handleResponse(response);
 };
@@ -61,14 +46,23 @@ export const createAttendance = async (attendanceData) => {
 // ========================================
 // UPDATE ATTENDANCE
 // ========================================
-export const updateAttendance = async (id, attendanceData) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(attendanceData),
-  });
+
+export const updateAttendance = async (
+  id,
+  attendanceData
+) => {
+  const response = await fetch(
+    `${API_URL}/attendance/${id}`,
+    {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(attendanceData),
+    }
+  );
 
   return await handleResponse(response);
 };
@@ -76,10 +70,14 @@ export const updateAttendance = async (id, attendanceData) => {
 // ========================================
 // DELETE ATTENDANCE
 // ========================================
+
 export const deleteAttendance = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
+  const response = await fetch(
+    `${API_URL}/attendance/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
   return await handleResponse(response);
 };

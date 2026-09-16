@@ -1,206 +1,48 @@
-const API_URL =
-  `${import.meta.env.VITE_API_URL}/api/members`;
+import API_URL, { handleResponse } from "./api";
 
-
-// ========================================
-// HELPER: HANDLE API RESPONSE
-// ========================================
-const handleResponse = async (response) => {
-  let data = null;
-
-  // Try to read JSON response
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = null;
-  }
-
-  // API returned an error
-  if (!response.ok) {
-
-    const message =
-      data?.message ||
-      data?.error ||
-      `Request failed with status ${response.status}`;
-
-    throw new Error(message);
-  }
-
-  return data;
-};
-
-
-// ========================================
 // GET ALL MEMBERS
-// ========================================
 export const getMembers = async () => {
-
-  try {
-
-    const response = await fetch(API_URL);
-
-    return await handleResponse(response);
-
-  } catch (error) {
-
-    console.error(
-      "Get members error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to fetch members"
-    );
-  }
+  const response = await fetch(`${API_URL}/members`);
+  return await handleResponse(response);
 };
 
-
-// ========================================
-// GET SINGLE MEMBER
-// ========================================
+// GET MEMBER BY ID
 export const getMemberById = async (id) => {
-
-  try {
-
-    const response = await fetch(
-      `${API_URL}/${id}`
-    );
-
-    return await handleResponse(response);
-
-  } catch (error) {
-
-    console.error(
-      "Get member error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to fetch member"
-    );
-  }
+  const response = await fetch(`${API_URL}/members/${id}`);
+  return await handleResponse(response);
 };
 
-
-// ========================================
 // CREATE MEMBER
-// ========================================
-export const createMember = async (
-  memberData
-) => {
+export const createMember = async (memberData) => {
+  const response = await fetch(`${API_URL}/members`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(memberData),
+  });
 
-  try {
-
-    const response = await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body:
-          JSON.stringify(memberData),
-      }
-    );
-
-    return await handleResponse(
-      response
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Create member error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to create member"
-    );
-  }
+  return await handleResponse(response);
 };
 
-
-// ========================================
 // UPDATE MEMBER
-// ========================================
-export const updateMember = async (
-  id,
-  memberData
-) => {
+export const updateMember = async (id, memberData) => {
+  const response = await fetch(`${API_URL}/members/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(memberData),
+  });
 
-  try {
-
-    const response = await fetch(
-      `${API_URL}/${id}`,
-      {
-        method: "PUT",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body:
-          JSON.stringify(memberData),
-      }
-    );
-
-    return await handleResponse(
-      response
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Update member error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to update member"
-    );
-  }
+  return await handleResponse(response);
 };
 
-
-// ========================================
 // DELETE MEMBER
-// ========================================
-export const deleteMember = async (
-  id
-) => {
+export const deleteMember = async (id) => {
+  const response = await fetch(`${API_URL}/members/${id}`, {
+    method: "DELETE",
+  });
 
-  try {
-
-    const response = await fetch(
-      `${API_URL}/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    return await handleResponse(
-      response
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Delete member error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to delete member"
-    );
-  }
+  return await handleResponse(response);
 };
