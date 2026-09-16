@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PaymentHeader from "../components/payments/PaymentHeader";
 import PaymentStats from "../components/payments/PaymentStats";
@@ -10,153 +10,54 @@ import Modal from "../components/common/Modal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import Pagination from "../components/common/Pagination";
 
+import usePayments from "../hooks/usePayments";
+import { getMembers } from "../services/memberService";
+import { getMembershipPlans } from "../services/membershipPlanService";
+
 function Payments() {
+  // =====================================================
+  // PAYMENTS API
+  // =====================================================
+
+  const {
+    payments,
+    loading: paymentsLoading,
+    error: paymentsError,
+    addPayment,
+    updatePayment,
+    deletePayment,
+  } = usePayments();
+
   // =====================================================
   // MEMBERS
   // =====================================================
 
-  const [members] = useState([
-    {
-      id: 1,
-      name: "Tesfaye",
-      phone: "0911223344",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Abel",
-      phone: "0912334455",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "John",
-      phone: "0913445566",
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "Michael",
-      phone: "0914556677",
-      status: "Active",
-    },
-  ]);
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] =
+    useState(true);
 
   // =====================================================
   // MEMBERSHIP PLANS
   // =====================================================
 
-  const [membershipPlans] =
-    useState([
-      {
-        id: 1,
-        name: "Basic",
-        price: 1000,
-        duration: 30,
-        status: "Active",
-      },
-      {
-        id: 2,
-        name: "Standard",
-        price: 1800,
-        duration: 30,
-        status: "Active",
-      },
-      {
-        id: 3,
-        name: "Premium",
-        price: 2500,
-        duration: 30,
-        status: "Active",
-      },
-    ]);
+  const [membershipPlans, setMembershipPlans] =
+    useState([]);
+
+  const [plansLoading, setPlansLoading] =
+    useState(true);
 
   // =====================================================
-  // PAYMENTS
+  // PAGE ERROR
   // =====================================================
 
-  const [payments, setPayments] =
-    useState([
-      {
-        id: 1,
-        memberId: 1,
-        memberName: "Tesfaye",
-        planId: 3,
-        plan: "Premium",
-        amount: 2500,
-        paymentDate: "2026-08-14",
-        method: "Cash",
-        status: "Paid",
-        reference: "PAY-001",
-      },
-      {
-        id: 2,
-        memberId: 2,
-        memberName: "Abel",
-        planId: 2,
-        plan: "Standard",
-        amount: 1800,
-        paymentDate: "2026-08-13",
-        method: "Bank Transfer",
-        status: "Paid",
-        reference: "PAY-002",
-      },
-      {
-        id: 3,
-        memberId: 3,
-        memberName: "John",
-        planId: 1,
-        plan: "Basic",
-        amount: 1000,
-        paymentDate: "2026-08-12",
-        method: "Mobile Money",
-        status: "Pending",
-        reference: "PAY-003",
-      },
-      {
-        id: 4,
-        memberId: 4,
-        memberName: "Michael",
-        planId: 3,
-        plan: "Premium",
-        amount: 2500,
-        paymentDate: "2026-08-10",
-        method: "Card",
-        status: "Paid",
-        reference: "PAY-004",
-      },
-      {
-        id: 5,
-        memberId: 1,
-        memberName: "Tesfaye",
-        planId: 2,
-        plan: "Standard",
-        amount: 1800,
-        paymentDate: "2026-08-08",
-        method: "Cash",
-        status: "Paid",
-        reference: "PAY-005",
-      },
-      {
-        id: 6,
-        memberId: 2,
-        memberName: "Abel",
-        planId: 1,
-        plan: "Basic",
-        amount: 1000,
-        paymentDate: "2026-08-05",
-        method: "Mobile Money",
-        status: "Cancelled",
-        reference: "PAY-006",
-      },
-    ]);
+  const [pageError, setPageError] =
+    useState("");
 
   // =====================================================
   // SEARCH / FILTER STATE
   // =====================================================
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   const [method, setMethod] =
     useState("All");
@@ -193,12 +94,168 @@ function Payments() {
   const [paymentToDelete, setPaymentToDelete] =
     useState(null);
 
+  const [deleteLoading, setDeleteLoading] =
+    useState(false);
+
+  // =====================================================
+  // SAVE LOADING
+  // =====================================================
+
+  const [saveLoading, setSaveLoading] =
+    useState(false);
+
+  // =====================================================
+  // LOAD MEMBERS
+  // =====================================================
+
+  const loadMembers = async () => {
+    try {
+      setMembersLoading(true);
+      setPageError("");
+
+      const data = await getMembers();
+
+      setMembers(data || []);
+    } catch (error) {
+      console.error(
+        "Failed to load members:",
+        error
+      );
+
+      setPageError(
+        error.message ||
+          "Failed to load members."
+      );
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  // =====================================================
+  // LOAD MEMBERSHIP PLANS
+  // =====================================================
+
+ const loadMembershipPlans = async () => {
+  try {
+    setPlansLoading(true);
+
+    const data = await getMembershipPlans();
+
+    setMembershipPlans(data || []);
+  } catch (error) {
+    console.error(
+      "Failed to load membership plans:",
+      error
+    );
+
+    setPageError(
+      error.message ||
+        "Failed to load membership plans."
+    );
+  } finally {
+    setPlansLoading(false);
+  }
+};
+
+  // =====================================================
+  // LOAD PAGE DATA
+  // =====================================================
+
+  useEffect(() => {
+    loadMembers();
+    loadMembershipPlans();
+  }, []);
+
+  // =====================================================
+  // CONVERT API PAYMENT → UI PAYMENT
+  // =====================================================
+
+  const paymentsForUI = payments.map(
+    (payment) => {
+      // -----------------------------------------------
+      // Find the member
+      // -----------------------------------------------
+
+      const member = members.find(
+        (item) =>
+          Number(item.id) ===
+          Number(payment.member_id)
+      );
+
+      // -----------------------------------------------
+      // Determine the member's current plan
+      //
+      // Payments table does not contain plan_id.
+      // Therefore plan information is derived from
+      // the member's current membership plan.
+      // -----------------------------------------------
+
+      const memberPlanId =
+        member?.plan_id ??
+        member?.membership_plan_id ??
+        "";
+
+      const selectedPlan =
+        membershipPlans.find(
+          (plan) =>
+            Number(plan.id) ===
+            Number(memberPlanId)
+        );
+
+      return {
+        id: payment.id,
+
+        memberId:
+          payment.member_id,
+
+        memberName:
+          payment.member_name ||
+          member?.name ||
+          "",
+
+        memberPhone:
+          payment.member_phone ||
+          member?.phone ||
+          "",
+
+        planId:
+          selectedPlan?.id ||
+          memberPlanId ||
+          "",
+
+        plan:
+          selectedPlan?.name ||
+          member?.membership_plan ||
+          "",
+
+        amount:
+          Number(payment.amount) || 0,
+
+        paymentDate:
+          payment.payment_date || "",
+
+        method:
+          payment.payment_method || "",
+
+        status:
+          payment.status || "",
+
+        reference:
+          payment.reference_number || "",
+
+        notes:
+          payment.notes || "",
+      };
+    }
+  );
+
   // =====================================================
   // ADD PAYMENT
   // =====================================================
 
   const handleAddPayment = () => {
     setSelectedPayment(null);
+    setPageError("");
     setShowModal(true);
   };
 
@@ -210,6 +267,7 @@ function Payments() {
     payment
   ) => {
     setSelectedPayment(payment);
+    setPageError("");
     setShowModal(true);
   };
 
@@ -218,55 +276,74 @@ function Payments() {
   // =====================================================
 
   const handleCloseModal = () => {
+    if (saveLoading) return;
+
     setShowModal(false);
     setSelectedPayment(null);
   };
 
   // =====================================================
   // SAVE PAYMENT
+  // CREATE / UPDATE
   // =====================================================
 
-  const handleSavePayment = (
+  const handleSavePayment = async (
     paymentData
   ) => {
-    if (selectedPayment) {
-      setPayments((previousPayments) =>
-        previousPayments.map(
-          (payment) =>
-            payment.id ===
-            selectedPayment.id
-              ? {
-                  ...payment,
-                  id: selectedPayment.id,
-                  ...paymentData,
-                }
-              : payment
-        )
+    try {
+      setSaveLoading(true);
+      setPageError("");
+
+      // -----------------------------------------------
+      // UPDATE
+      // -----------------------------------------------
+
+      if (selectedPayment) {
+        await updatePayment(
+          selectedPayment.id,
+          paymentData
+        );
+      }
+
+      // -----------------------------------------------
+      // CREATE
+      // -----------------------------------------------
+
+      else {
+        await addPayment(paymentData);
+      }
+
+      // -----------------------------------------------
+      // CLOSE MODAL
+      // -----------------------------------------------
+
+      setShowModal(false);
+      setSelectedPayment(null);
+    } catch (error) {
+      console.error(
+        "Failed to save payment:",
+        error
       );
-    } else {
-      const newPayment = {
-        id: Date.now(),
-        ...paymentData,
-      };
 
-      setPayments((previousPayments) => [
-        ...previousPayments,
-        newPayment,
-      ]);
+      setPageError(
+        error.message ||
+          "Failed to save payment."
+      );
+    } finally {
+      setSaveLoading(false);
     }
-
-    handleCloseModal();
   };
 
   // =====================================================
-  // DELETE
+  // DELETE PAYMENT
   // =====================================================
 
   const handleDeletePayment = (id) => {
-    const payment = payments.find(
-      (payment) =>
-        payment.id === id
-    );
+    const payment =
+      paymentsForUI.find(
+        (item) =>
+          item.id === id
+      );
 
     if (!payment) return;
 
@@ -278,26 +355,44 @@ function Payments() {
   // CONFIRM DELETE
   // =====================================================
 
-  const confirmDeletePayment = () => {
-    if (!paymentToDelete) return;
+  const confirmDeletePayment =
+    async () => {
+      if (!paymentToDelete) {
+        return;
+      }
 
-    setPayments((previousPayments) =>
-      previousPayments.filter(
-        (payment) =>
-          payment.id !==
+      try {
+        setDeleteLoading(true);
+        setPageError("");
+
+        await deletePayment(
           paymentToDelete.id
-      )
-    );
+        );
 
-    setPaymentToDelete(null);
-    setShowDeleteDialog(false);
-  };
+        setPaymentToDelete(null);
+        setShowDeleteDialog(false);
+      } catch (error) {
+        console.error(
+          "Failed to delete payment:",
+          error
+        );
+
+        setPageError(
+          error.message ||
+            "Failed to delete payment."
+        );
+      } finally {
+        setDeleteLoading(false);
+      }
+    };
 
   // =====================================================
   // CANCEL DELETE
   // =====================================================
 
   const cancelDeletePayment = () => {
+    if (deleteLoading) return;
+
     setPaymentToDelete(null);
     setShowDeleteDialog(false);
   };
@@ -318,41 +413,59 @@ function Payments() {
   // =====================================================
 
   const filteredPayments =
-    payments.filter((payment) => {
-      const searchValue =
-        search.toLowerCase();
+    paymentsForUI.filter(
+      (payment) => {
+        const searchValue =
+          search.toLowerCase();
 
-      const matchesSearch =
-        payment.memberName
-          .toLowerCase()
-          .includes(searchValue) ||
-        payment.reference
-          .toLowerCase()
-          .includes(searchValue);
+        const memberName =
+          payment.memberName
+            ?.toLowerCase() || "";
 
-      const matchesMethod =
-        method === "All" ||
-        payment.method === method;
+        const memberPhone =
+          payment.memberPhone
+            ?.toLowerCase() || "";
 
-      const matchesStatus =
-        status === "All" ||
-        payment.status === status;
+        const reference =
+          payment.reference
+            ?.toLowerCase() || "";
 
-      return (
-        matchesSearch &&
-        matchesMethod &&
-        matchesStatus
-      );
-    });
+        const matchesSearch =
+          memberName.includes(
+            searchValue
+          ) ||
+          memberPhone.includes(
+            searchValue
+          ) ||
+          reference.includes(
+            searchValue
+          );
+
+        const matchesMethod =
+          method === "All" ||
+          payment.method === method;
+
+        const matchesStatus =
+          status === "All" ||
+          payment.status === status;
+
+        return (
+          matchesSearch &&
+          matchesMethod &&
+          matchesStatus
+        );
+      }
+    );
 
   // =====================================================
-  // PAGINATION CALCULATION
+  // PAGINATION
   // =====================================================
 
-  const totalPages = Math.ceil(
-    filteredPayments.length /
-      itemsPerPage
-  );
+  const totalPages =
+    Math.ceil(
+      filteredPayments.length /
+        itemsPerPage
+    );
 
   const startIndex =
     (currentPage - 1) *
@@ -371,20 +484,75 @@ function Payments() {
   // PAGE CHANGE
   // =====================================================
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (
+    page
+  ) => {
     setCurrentPage(page);
   };
 
   // =====================================================
-  // RENDER
+  // LOADING
+  // =====================================================
+
+  const pageLoading =
+    paymentsLoading ||
+    membersLoading ||
+    plansLoading;
+
+  if (pageLoading) {
+    return (
+      <div className="p-6">
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          <p className="text-gray-600 text-lg">
+            Loading payments...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (
+    paymentsError &&
+    payments.length === 0
+  ) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-300 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-red-700">
+            Failed to load payments
+          </h2>
+
+          <p className="text-red-600 mt-2">
+            {paymentsError}
+          </p>
+
+          <button
+            onClick={() => {
+              window.location.reload();
+            }}
+            className="mt-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // PAGE
   // =====================================================
 
   return (
-    <div>
+    <div className="space-y-6">
 
-      {/* =================================================
+      {/* ==========================================
           HEADER
-      ================================================= */}
+      ========================================== */}
 
       <PaymentHeader
         onAddPayment={
@@ -392,17 +560,29 @@ function Payments() {
         }
       />
 
-      {/* =================================================
+      {/* ==========================================
+          ERROR MESSAGE
+      ========================================== */}
+
+      {pageError && (
+        <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+          <p className="text-red-700">
+            {pageError}
+          </p>
+        </div>
+      )}
+
+      {/* ==========================================
           STATISTICS
-      ================================================= */}
+      ========================================== */}
 
       <PaymentStats
-        payments={payments}
+        payments={paymentsForUI}
       />
 
-      {/* =================================================
+      {/* ==========================================
           FILTER
-      ================================================= */}
+      ========================================== */}
 
       <PaymentFilter
         search={search}
@@ -428,33 +608,43 @@ function Payments() {
         }
       />
 
-      {/* =================================================
+      {/* ==========================================
           TABLE
-      ================================================= */}
+      ========================================== */}
 
       <PaymentTable
-        payments={paginatedPayments}
-        onEdit={handleEditPayment}
-        onDelete={handleDeletePayment}
+        payments={
+          paginatedPayments
+        }
+        onEdit={
+          handleEditPayment
+        }
+        onDelete={
+          handleDeletePayment
+        }
       />
 
-      {/* =================================================
+      {/* ==========================================
           PAGINATION
-      ================================================= */}
+      ========================================== */}
 
       <div className="mt-6 flex justify-center">
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
+          currentPage={
+            currentPage
+          }
+          totalPages={
+            totalPages
+          }
           onPageChange={
             handlePageChange
           }
         />
       </div>
 
-      {/* =================================================
+      {/* ==========================================
           PAYMENT MODAL
-      ================================================= */}
+      ========================================== */}
 
       <Modal
         isOpen={showModal}
@@ -463,10 +653,14 @@ function Payments() {
             ? "Edit Payment"
             : "Add Payment"
         }
-        onClose={handleCloseModal}
+        onClose={
+          handleCloseModal
+        }
       >
         <PaymentForm
-          onSave={handleSavePayment}
+          onSave={
+            handleSavePayment
+          }
           initialData={
             selectedPayment
           }
@@ -474,12 +668,15 @@ function Payments() {
           membershipPlans={
             membershipPlans
           }
+          loading={
+            saveLoading
+          }
         />
       </Modal>
 
-      {/* =================================================
+      {/* ==========================================
           DELETE DIALOG
-      ================================================= */}
+      ========================================== */}
 
       <ConfirmDialog
         isOpen={
@@ -488,7 +685,7 @@ function Payments() {
         title="Delete Payment"
         message={
           paymentToDelete
-            ? `Are you sure you want to delete payment "${paymentToDelete.reference}" for ${paymentToDelete.memberName}?`
+            ? `Are you sure you want to delete payment "${paymentToDelete.reference || paymentToDelete.id}" for ${paymentToDelete.memberName}?`
             : ""
         }
         onConfirm={
