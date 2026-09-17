@@ -281,92 +281,84 @@ const attendanceForUI = attendance.map((record) => ({
 
 
 
-  // ========================================
-  // FILTER ATTENDANCE
-  // ========================================
+// ========================================
+// FILTER ATTENDANCE
+// ========================================
 
- const filteredAttendance =
-  attendanceForUI.filter((record) => {
-      // ------------------------------------
-      // SEARCH
-      // ------------------------------------
+const filteredAttendance = attendanceForUI.filter((record) => {
+  // ------------------------------------
+  // SEARCH
+  // ------------------------------------
 
-      const searchValue =
-        search.trim().toLowerCase();
+  const searchValue = search.trim().toLowerCase();
 
-      const memberName =
-        record.member_name || "";
+  const memberName = record.memberName || "";
+  const memberPhone = record.memberPhone || "";
+  const memberId = record.memberId ?? "";
 
-      const memberPhone =
-        record.member_phone || "";
+  const matchesSearch =
+    !searchValue ||
+    memberName.toLowerCase().includes(searchValue) ||
+    memberPhone.toLowerCase().includes(searchValue) ||
+    String(memberId).includes(searchValue);
 
-      const memberId =
-        record.member_id ?? "";
+  // ------------------------------------
+  // DATE
+  // ------------------------------------
 
-      const matchesSearch =
-        !searchValue ||
-        memberName
-          .toLowerCase()
-          .includes(searchValue) ||
-        memberPhone
-          .toLowerCase()
-          .includes(searchValue) ||
-        String(memberId)
-          .toLowerCase()
-          .includes(searchValue);
+  let matchesDate = true;
 
-      // ------------------------------------
-      // DATE
-      // ------------------------------------
+  const attendanceDate = record.date || "";
 
-      let matchesDate = true;
+  if (dateFilter === "today") {
+    const today = new Date();
 
-      const attendanceDate =
-        record.attendance_date;
+    const todayString = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
 
-      if (dateFilter === "today") {
-        const today =
-          new Date()
-            .toISOString()
-            .split("T")[0];
+    matchesDate = attendanceDate === todayString;
+  }
 
-        matchesDate =
-          attendanceDate === today;
-      }
+  if (dateFilter === "specific") {
+    matchesDate =
+      !startDate ||
+      attendanceDate === startDate;
+  }
 
-      if (dateFilter === "specific") {
-        matchesDate =
-          !startDate ||
-          attendanceDate === startDate;
-      }
+  if (dateFilter === "range") {
+    const afterStart =
+      !startDate ||
+      attendanceDate >= startDate;
 
-      if (dateFilter === "range") {
-        const afterStart =
-          !startDate ||
-          attendanceDate >= startDate;
+    const beforeEnd =
+      !endDate ||
+      attendanceDate <= endDate;
 
-        const beforeEnd =
-          !endDate ||
-          attendanceDate <= endDate;
+    matchesDate =
+      afterStart && beforeEnd;
+  }
 
-        matchesDate =
-          afterStart && beforeEnd;
-      }
+  // ------------------------------------
+  // STATUS
+  // ------------------------------------
 
-      // ------------------------------------
-      // STATUS
-      // ------------------------------------
+  const matchesStatus =
+    status === "All" ||
+    record.status === status;
 
-      const matchesStatus =
-        status === "All" ||
-        record.status === status;
+  // ------------------------------------
+  // FINAL RESULT
+  // ------------------------------------
 
-      return (
-        matchesSearch &&
-        matchesDate &&
-        matchesStatus
-      );
-    });
+  return (
+    matchesSearch &&
+    matchesDate &&
+    matchesStatus
+  );
+});
 
   // ========================================
   // PAGINATION
