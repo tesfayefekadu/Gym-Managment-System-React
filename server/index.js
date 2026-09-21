@@ -10,6 +10,7 @@ const attendanceRoutes = require("./routes/attendanceRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/membership-plans",membershipPlanRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 
 // Test route
