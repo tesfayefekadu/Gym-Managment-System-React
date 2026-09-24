@@ -9,41 +9,22 @@ const {
 } = require("../controllers/memberController");
 
 const router = express.Router();
-
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 // GET all members
-router.get(
-  "/",
-  getMembers
-);
+router.get("/", getMembers);
 
-
-// GET single member
-router.get(
-  "/:id",
-  getMemberById
-);
-
+// GET one member
+router.get("/:id", getMemberById);
 
 // CREATE member
-router.post(
-  "/",
-  createMember
-);
-
+router.post("/", createMember);
 
 // UPDATE member
-router.put(
-  "/:id",
-  updateMember
-);
-
+router.put("/:id", updateMember);
 
 // DELETE member
-router.delete(
-  "/:id",
-  deleteMember
-);
-
+router.delete("/:id", deleteMember);
 
 module.exports = router;
