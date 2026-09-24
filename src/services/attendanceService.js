@@ -1,11 +1,16 @@
-import API_URL, { handleResponse } from "./api";
+import API_URL, {
+  handleResponse,
+  authHeaders,
+} from "./api";
 
 // ========================================
 // GET ALL ATTENDANCE
 // ========================================
 
 export const getAttendance = async () => {
-  const response = await fetch(`${API_URL}/attendance`);
+  const response = await fetch(`${API_URL}/attendance`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -15,9 +20,9 @@ export const getAttendance = async () => {
 // ========================================
 
 export const getAttendanceById = async (id) => {
-  const response = await fetch(
-    `${API_URL}/attendance/${id}`
-  );
+  const response = await fetch(`${API_URL}/attendance/${id}`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -27,18 +32,11 @@ export const getAttendanceById = async (id) => {
 // ========================================
 
 export const createAttendance = async (attendanceData) => {
-  const response = await fetch(
-    `${API_URL}/attendance`,
-    {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(attendanceData),
-    }
-  );
+  const response = await fetch(`${API_URL}/attendance`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify(attendanceData),
+  });
 
   return await handleResponse(response);
 };
@@ -47,22 +45,12 @@ export const createAttendance = async (attendanceData) => {
 // UPDATE ATTENDANCE
 // ========================================
 
-export const updateAttendance = async (
-  id,
-  attendanceData
-) => {
-  const response = await fetch(
-    `${API_URL}/attendance/${id}`,
-    {
-      method: "PUT",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(attendanceData),
-    }
-  );
+export const updateAttendance = async (id, attendanceData) => {
+  const response = await fetch(`${API_URL}/attendance/${id}`, {
+    method: "PUT",
+    headers: authHeaders(true),
+    body: JSON.stringify(attendanceData),
+  });
 
   return await handleResponse(response);
 };
@@ -72,12 +60,10 @@ export const updateAttendance = async (
 // ========================================
 
 export const deleteAttendance = async (id) => {
-  const response = await fetch(
-    `${API_URL}/attendance/${id}`,
-    {
-      method: "DELETE",
-    }
-  );
+  const response = await fetch(`${API_URL}/attendance/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
