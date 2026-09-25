@@ -8,10 +8,18 @@ import Trainers from "../pages/Trainers";
 import MembershipPlans from "../pages/MembershipPlans";
 import Attendance from "../pages/Attendance";
 import Payments from "../pages/Payments";
+import Login from "../pages/Login";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 function AppRoutes() {
   return (
+
+
     <Routes>
+      <Route path="/login" element={<Login />} />
+
+      <Route element={<ProtectedRoute />}>
+
       <Route
         path="/"
         element={
@@ -73,6 +81,7 @@ function AppRoutes() {
           </Layout>
         }
       />
+      </Route>
     </Routes>
   );
 }
