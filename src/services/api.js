@@ -9,6 +9,16 @@ export const handleResponse = async (response) => {
     data = null;
   }
 
+  // Token expired / invalid
+  if (response.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    window.location.href = "/login";
+
+    throw new Error("Authentication required");
+  }
+
   if (!response.ok) {
     const message =
       data?.message ||
@@ -19,6 +29,23 @@ export const handleResponse = async (response) => {
   }
 
   return data;
+};
+
+// Create headers with JWT
+export const authHeaders = (includeJson = false) => {
+  const token = localStorage.getItem("token");
+
+  const headers = {};
+
+  if (includeJson) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
 };
 
 export default API_URL;
