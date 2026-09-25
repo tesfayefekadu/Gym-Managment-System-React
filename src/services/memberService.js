@@ -1,14 +1,23 @@
-import API_URL, { handleResponse } from "./api";
+import API_URL, {
+  handleResponse,
+  authHeaders,
+} from "./api";
 
 // GET ALL MEMBERS
 export const getMembers = async () => {
-  const response = await fetch(`${API_URL}/members`);
+  const response = await fetch(`${API_URL}/members`, {
+    headers: authHeaders(),
+  });
+
   return await handleResponse(response);
 };
 
 // GET MEMBER BY ID
 export const getMemberById = async (id) => {
-  const response = await fetch(`${API_URL}/members/${id}`);
+  const response = await fetch(`${API_URL}/members/${id}`, {
+    headers: authHeaders(),
+  });
+
   return await handleResponse(response);
 };
 
@@ -16,9 +25,7 @@ export const getMemberById = async (id) => {
 export const createMember = async (memberData) => {
   const response = await fetch(`${API_URL}/members`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders(true),
     body: JSON.stringify(memberData),
   });
 
@@ -29,9 +36,7 @@ export const createMember = async (memberData) => {
 export const updateMember = async (id, memberData) => {
   const response = await fetch(`${API_URL}/members/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders(true),
     body: JSON.stringify(memberData),
   });
 
@@ -42,6 +47,7 @@ export const updateMember = async (id, memberData) => {
 export const deleteMember = async (id) => {
   const response = await fetch(`${API_URL}/members/${id}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
 
   return await handleResponse(response);
