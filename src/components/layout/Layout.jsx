@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import { getCurrentUser, logout } from "../../services/authService";
 
 function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const user = getCurrentUser();
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
