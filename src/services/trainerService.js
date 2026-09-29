@@ -1,11 +1,16 @@
-import API_URL, { handleResponse } from "./api";
+import API_URL, {
+  handleResponse,
+  authHeaders,
+} from "./api";
 
 // ========================================
 // GET ALL TRAINERS
 // ========================================
 
 export const getTrainers = async () => {
-  const response = await fetch(`${API_URL}/trainers`);
+  const response = await fetch(`${API_URL}/trainers`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -15,7 +20,9 @@ export const getTrainers = async () => {
 // ========================================
 
 export const getTrainerById = async (id) => {
-  const response = await fetch(`${API_URL}/trainers/${id}`);
+  const response = await fetch(`${API_URL}/trainers/${id}`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -27,11 +34,7 @@ export const getTrainerById = async (id) => {
 export const createTrainer = async (trainerData) => {
   const response = await fetch(`${API_URL}/trainers`, {
     method: "POST",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
+    headers: authHeaders(true),
     body: JSON.stringify(trainerData),
   });
 
@@ -45,11 +48,7 @@ export const createTrainer = async (trainerData) => {
 export const updateTrainer = async (id, trainerData) => {
   const response = await fetch(`${API_URL}/trainers/${id}`, {
     method: "PUT",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
+    headers: authHeaders(true),
     body: JSON.stringify(trainerData),
   });
 
@@ -63,6 +62,7 @@ export const updateTrainer = async (id, trainerData) => {
 export const deleteTrainer = async (id) => {
   const response = await fetch(`${API_URL}/trainers/${id}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
 
   return await handleResponse(response);
