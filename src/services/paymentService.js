@@ -1,14 +1,21 @@
-import API_URL, { handleResponse } from "./api";
+import API_URL, {
+  handleResponse,
+  authHeaders,
+} from "./api";
 
 // GET ALL PAYMENTS
 export const getPayments = async () => {
-  const response = await fetch(`${API_URL}/payments`);
+  const response = await fetch(`${API_URL}/payments`, {
+    headers: authHeaders(),
+  });
   return await handleResponse(response);
 };
 
 // GET PAYMENT BY ID
 export const getPaymentById = async (id) => {
-  const response = await fetch(`${API_URL}/payments/${id}`);
+  const response = await fetch(`${API_URL}/payments/${id}`, {
+    headers: authHeaders(),
+  });
   return await handleResponse(response);
 };
 
@@ -16,9 +23,7 @@ export const getPaymentById = async (id) => {
 export const createPayment = async (paymentData) => {
   const response = await fetch(`${API_URL}/payments`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders(true),
     body: JSON.stringify(paymentData),
   });
 
@@ -29,9 +34,7 @@ export const createPayment = async (paymentData) => {
 export const updatePayment = async (id, paymentData) => {
   const response = await fetch(`${API_URL}/payments/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders(true),
     body: JSON.stringify(paymentData),
   });
 
@@ -42,6 +45,7 @@ export const updatePayment = async (id, paymentData) => {
 export const deletePayment = async (id) => {
   const response = await fetch(`${API_URL}/payments/${id}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
 
   return await handleResponse(response);
