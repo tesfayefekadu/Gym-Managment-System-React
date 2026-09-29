@@ -12,19 +12,43 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
-// GET all members
-router.get("/", getMembers);
+// ========================================
+// MEMBER ROUTES
+// ========================================
 
-// GET one member
-router.get("/:id", getMemberById);
+router.get(
+  "/",
+  authenticateToken,
+  authorizeRoles("Admin", "Manager", "Staff"),
+  getMembers
+);
 
-// CREATE member
-router.post("/", createMember);
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("Admin", "Manager", "Staff"),
+  getMemberById
+);
 
-// UPDATE member
-router.put("/:id", updateMember);
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("Admin", "Manager", "Staff"),
+  createMember
+);
 
-// DELETE member
-router.delete("/:id", deleteMember);
+router.put(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("Admin", "Manager", "Staff"),
+  updateMember
+);
+
+router.delete(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("Admin", "Manager"),
+  deleteMember
+);
 
 module.exports = router;
