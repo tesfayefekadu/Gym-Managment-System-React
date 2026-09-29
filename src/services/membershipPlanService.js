@@ -1,11 +1,16 @@
-import API_URL, { handleResponse } from "./api";
+import API_URL, {
+  handleResponse,
+  authHeaders,
+} from "./api";
 
 // ========================================
 // GET ALL MEMBERSHIP PLANS
 // ========================================
 
 export const getMembershipPlans = async () => {
-  const response = await fetch(`${API_URL}/membership-plans`);
+  const response = await fetch(`${API_URL}/membership-plans`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -15,9 +20,9 @@ export const getMembershipPlans = async () => {
 // ========================================
 
 export const getMembershipPlanById = async (id) => {
-  const response = await fetch(
-    `${API_URL}/membership-plans/${id}`
-  );
+  const response = await fetch(`${API_URL}/membership-plans/${id}`, {
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
@@ -27,18 +32,11 @@ export const getMembershipPlanById = async (id) => {
 // ========================================
 
 export const createMembershipPlan = async (planData) => {
-  const response = await fetch(
-    `${API_URL}/membership-plans`,
-    {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(planData),
-    }
-  );
+  const response = await fetch(`${API_URL}/membership-plans`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify(planData),
+  });
 
   return await handleResponse(response);
 };
@@ -47,22 +45,12 @@ export const createMembershipPlan = async (planData) => {
 // UPDATE MEMBERSHIP PLAN
 // ========================================
 
-export const updateMembershipPlan = async (
-  id,
-  planData
-) => {
-  const response = await fetch(
-    `${API_URL}/membership-plans/${id}`,
-    {
-      method: "PUT",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(planData),
-    }
-  );
+export const updateMembershipPlan = async (id, planData) => {
+  const response = await fetch(`${API_URL}/membership-plans/${id}`, {
+    method: "PUT",
+    headers: authHeaders(true),
+    body: JSON.stringify(planData),
+  });
 
   return await handleResponse(response);
 };
@@ -72,12 +60,10 @@ export const updateMembershipPlan = async (
 // ========================================
 
 export const deleteMembershipPlan = async (id) => {
-  const response = await fetch(
-    `${API_URL}/membership-plans/${id}`,
-    {
-      method: "DELETE",
-    }
-  );
+  const response = await fetch(`${API_URL}/membership-plans/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
 
   return await handleResponse(response);
 };
