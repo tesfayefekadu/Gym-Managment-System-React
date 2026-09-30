@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { getCurrentUser } from "../services/authService";
+
 import { getMembers } from "../services/memberService";
 import { getTrainers } from "../services/trainerService";
 import { getMembershipPlans } from "../services/membershipPlanService";
@@ -23,6 +25,23 @@ function useDashboard() {
       setLoading(true);
       setError("");
 
+      const user = getCurrentUser();
+      const role = user?.role;
+
+      const membersPromise = getMembers();
+      const attendancePromise = getAttendance();
+      const paymentsPromise = getPayments();
+
+      let trainersPromise = Promise.resolve([]);
+      let plansPromise = Promise.resolve([]);
+
+      // Only Admin and Manager can access
+      // Trainers and Membership Plans APIs
+      if (role === "Admin" || role === "Manager") {
+        trainersPromise = getTrainers();
+        plansPromise = getMembershipPlans();
+      }
+
       const [
         members,
         trainers,
@@ -30,11 +49,11 @@ function useDashboard() {
         attendance,
         payments,
       ] = await Promise.all([
-        getMembers(),
-        getTrainers(),
-        getMembershipPlans(),
-        getAttendance(),
-        getPayments(),
+        membersPromise,
+        trainersPromise,
+        plansPromise,
+        attendancePromise,
+        paymentsPromise,
       ]);
 
       setDashboardData({
@@ -44,6 +63,7 @@ function useDashboard() {
         attendance: attendance || [],
         payments: payments || [],
       });
+
     } catch (error) {
       console.error(
         "Failed to fetch dashboard data:",
@@ -52,8 +72,9 @@ function useDashboard() {
 
       setError(
         error.message ||
-          "Failed to load dashboard data."
+        "Failed to load dashboard data."
       );
+
     } finally {
       setLoading(false);
     }
