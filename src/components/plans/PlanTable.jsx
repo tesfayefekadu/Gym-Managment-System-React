@@ -17,7 +17,7 @@ function PlanTable({
       label: "Plan Name",
     },
     {
-      key: "duration_months",
+      key: "duration",
       label: "Duration",
     },
     {
