@@ -6,6 +6,13 @@ const {
   login,
 } = require("../controllers/authController");
 
+const validate = require("../middleware/validationMiddleware");
+
+const {
+  registerValidation,
+  loginValidation,
+} = require("../validators/authValidator");
+
 const router = express.Router();
 
 // Limit authentication requests
@@ -19,7 +26,22 @@ const authLimiter = rateLimit({
   },
 });
 
-router.post("/register", authLimiter, register);
-router.post("/login", authLimiter, login);
+// Register
+router.post(
+  "/register",
+  authLimiter,
+  registerValidation,
+  validate,
+  register
+);
+
+// Login
+router.post(
+  "/login",
+  authLimiter,
+  loginValidation,
+  validate,
+  login
+);
 
 module.exports = router;
