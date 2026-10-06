@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-
+const getWoredaScope = require("../utils/woredaScope");
 // =====================================================
 // HELPER FUNCTIONS
 // =====================================================
@@ -68,7 +68,9 @@ const isValidStatus = (status) => {
 const getMembers = async (req, res) => {
   try {
 
-    const result = await pool.query(`
+    const woredaId = getWoredaScope(req);
+
+    let query = `
       SELECT
         m.id,
         m.name,
@@ -79,15 +81,25 @@ const getMembers = async (req, res) => {
         m.plan_id,
         mp.name AS membership_plan,
         m.status,
-        m.join_date
+        m.join_date,
+        m.woreda_id
 
       FROM members m
 
       LEFT JOIN membership_plans mp
         ON m.plan_id = mp.id
+    `;
 
-      ORDER BY m.id DESC
-    `);
+    const values = [];
+
+    if (woredaId !== null) {
+      query += ` WHERE m.woreda_id = $1`;
+      values.push(woredaId);
+    }
+
+    query += ` ORDER BY m.id DESC`;
+
+    const result = await pool.query(query, values);
 
 
     res.status(200).json(
@@ -135,30 +147,38 @@ const getMemberById = async (
     }
 
 
-    const result =
-      await pool.query(
-        `
-        SELECT
-          m.id,
-          m.name,
-          m.gender,
-          m.phone,
-          m.email,
-          m.date_of_birth,
-          m.plan_id,
-          mp.name AS membership_plan,
-          m.status,
-          m.join_date
+    const woredaId = getWoredaScope(req);
 
-        FROM members m
+    let query = `
+      SELECT
+        m.id,
+        m.name,
+        m.gender,
+        m.phone,
+        m.email,
+        m.date_of_birth,
+        m.plan_id,
+        mp.name AS membership_plan,
+        m.status,
+        m.join_date,
+        m.woreda_id
 
-        LEFT JOIN membership_plans mp
-          ON m.plan_id = mp.id
+      FROM members m
 
-        WHERE m.id = $1
-        `,
-        [id]
-      );
+      LEFT JOIN membership_plans mp
+        ON m.plan_id = mp.id
+
+      WHERE m.id = $1
+    `;
+
+    const values = [id];
+
+    if (woredaId !== null) {
+      query += ` AND m.woreda_id = $2`;
+      values.push(woredaId);
+    }
+
+    const result = await pool.query(query, values);
 
 
     if (
@@ -354,33 +374,62 @@ const createMember = async (
 
 
     // =================================================
+    // DETERMINE TARGET WOREDA
+    // =================================================
+
+    const woredaId = getWoredaScope(req);
+
+    const finalWoredaId =
+      req.user.role === "Admin"
+        ? req.body.woreda_id
+        : woredaId;
+
+    if (!finalWoredaId) {
+      return res.status(400).json({
+        message: "Woreda is required",
+      });
+    }
+
+    // Admin: verify the provided woreda actually exists
+    if (req.user.role === "Admin") {
+      const woredaResult = await pool.query(
+        `
+        SELECT id
+        FROM woredas
+        WHERE id = $1
+        `,
+        [finalWoredaId]
+      );
+
+      if (woredaResult.rows.length === 0) {
+        return res.status(400).json({
+          message: "Selected woreda does not exist",
+        });
+      }
+    }
+
+    // =================================================
     // MEMBERSHIP PLAN VALIDATION
+    // Plan must belong to the target woreda (for Admin and Manager/Staff)
     // =================================================
 
     if (plan_id) {
+      const planResult = await pool.query(
+        `
+        SELECT id
+        FROM membership_plans
+        WHERE id = $1
+          AND woreda_id = $2
+        `,
+        [plan_id, finalWoredaId]
+      );
 
-      const planResult =
-        await pool.query(
-          `
-          SELECT id
-          FROM membership_plans
-          WHERE id = $1
-          `,
-          [plan_id]
-        );
-
-
-      if (
-        planResult.rows.length === 0
-      ) {
-
+      if (planResult.rows.length === 0) {
         return res.status(400).json({
           message:
-            "Selected membership plan does not exist",
+            "Selected membership plan does not belong to the target woreda",
         });
-
       }
-
     }
 
 
@@ -446,44 +495,44 @@ const createMember = async (
     // INSERT MEMBER
     // =================================================
 
-    const insertResult =
-      await pool.query(
-        `
-        INSERT INTO members (
-          name,
-          gender,
-          phone,
-          email,
-          date_of_birth,
-          plan_id,
-          status,
-          join_date
-        )
-
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8
-        )
-
-        RETURNING id
-        `,
-        [
-          name.trim(),
-          gender || "Male",
-          phone,
-          email || null,
-          date_of_birth || null,
-          plan_id || null,
-          status || "Active",
-          join_date || null,
-        ]
-      );
+    const insertResult = await pool.query(
+      `
+      INSERT INTO members (
+        name,
+        gender,
+        phone,
+        email,
+        date_of_birth,
+        plan_id,
+        status,
+        join_date,
+        woreda_id
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9
+      )
+      RETURNING id
+      `,
+      [
+        name.trim(),
+        gender || "Male",
+        phone,
+        email || null,
+        date_of_birth || null,
+        plan_id || null,
+        status || "Active",
+        join_date || null,
+        finalWoredaId,
+      ]
+    );
 
 
     const newMemberId =
@@ -494,30 +543,30 @@ const createMember = async (
     // GET CREATED MEMBER WITH PLAN
     // =================================================
 
-    const result =
-      await pool.query(
-        `
-        SELECT
-          m.id,
-          m.name,
-          m.gender,
-          m.phone,
-          m.email,
-          m.date_of_birth,
-          m.plan_id,
-          mp.name AS membership_plan,
-          m.status,
-          m.join_date
+    const result = await pool.query(
+      `
+      SELECT
+        m.id,
+        m.name,
+        m.gender,
+        m.phone,
+        m.email,
+        m.date_of_birth,
+        m.plan_id,
+        mp.name AS membership_plan,
+        m.status,
+        m.join_date,
+        m.woreda_id
 
-        FROM members m
+      FROM members m
 
-        LEFT JOIN membership_plans mp
-          ON m.plan_id = mp.id
+      LEFT JOIN membership_plans mp
+        ON m.plan_id = mp.id
 
-        WHERE m.id = $1
-        `,
-        [newMemberId]
-      );
+      WHERE m.id = $1
+      `,
+      [newMemberId]
+    );
 
 
     res.status(201).json(
@@ -749,15 +798,25 @@ const updateMember = async (
     // CHECK MEMBER EXISTS
     // =================================================
 
-    const memberResult =
-      await pool.query(
-        `
-        SELECT id
-        FROM members
-        WHERE id = $1
-        `,
-        [id]
-      );
+    const woredaId = getWoredaScope(req);
+
+    let memberQuery = `
+      SELECT id, woreda_id
+      FROM members
+      WHERE id = $1
+    `;
+
+    const memberValues = [id];
+
+    if (woredaId !== null) {
+      memberQuery += ` AND woreda_id = $2`;
+      memberValues.push(woredaId);
+    }
+
+    const memberResult = await pool.query(
+      memberQuery,
+      memberValues
+    );
 
 
     if (
@@ -771,35 +830,31 @@ const updateMember = async (
 
     }
 
+    const memberWoredaId = memberResult.rows[0].woreda_id;
+
 
     // =================================================
     // MEMBERSHIP PLAN VALIDATION
+    // Plan must belong to the member's woreda (Admin included)
     // =================================================
 
     if (plan_id) {
+      const planResult = await pool.query(
+        `
+        SELECT id
+        FROM membership_plans
+        WHERE id = $1
+          AND woreda_id = $2
+        `,
+        [plan_id, memberWoredaId]
+      );
 
-      const planResult =
-        await pool.query(
-          `
-          SELECT id
-          FROM membership_plans
-          WHERE id = $1
-          `,
-          [plan_id]
-        );
-
-
-      if (
-        planResult.rows.length === 0
-      ) {
-
+      if (planResult.rows.length === 0) {
         return res.status(400).json({
           message:
-            "Selected membership plan does not exist",
+            "Selected membership plan does not belong to the member's woreda",
         });
-
       }
-
     }
 
 
@@ -875,37 +930,45 @@ const updateMember = async (
     // UPDATE MEMBER
     // =================================================
 
-    const updateResult =
-      await pool.query(
-        `
-        UPDATE members
+    let updateQuery = `
+      UPDATE members
 
-        SET
-          name = $1,
-          gender = $2,
-          phone = $3,
-          email = $4,
-          date_of_birth = $5,
-          plan_id = $6,
-          status = $7,
-          join_date = $8
+      SET
+        name = $1,
+        gender = $2,
+        phone = $3,
+        email = $4,
+        date_of_birth = $5,
+        plan_id = $6,
+        status = $7,
+        join_date = $8
 
-        WHERE id = $9
+      WHERE id = $9
+    `;
 
-        RETURNING id
-        `,
-        [
-          name.trim(),
-          gender || "Male",
-          phone,
-          email || null,
-          date_of_birth || null,
-          plan_id || null,
-          status || "Active",
-          join_date || null,
-          id,
-        ]
-      );
+    const updateValues = [
+      name.trim(),
+      gender || "Male",
+      phone,
+      email || null,
+      date_of_birth || null,
+      plan_id || null,
+      status || "Active",
+      join_date || null,
+      id,
+    ];
+
+    if (woredaId !== null) {
+      updateQuery += ` AND woreda_id = $10`;
+      updateValues.push(woredaId);
+    }
+
+    updateQuery += ` RETURNING id`;
+
+    const updateResult = await pool.query(
+      updateQuery,
+      updateValues
+    );
 
 
     if (
@@ -924,30 +987,30 @@ const updateMember = async (
     // GET UPDATED MEMBER WITH PLAN
     // =================================================
 
-    const result =
-      await pool.query(
-        `
-        SELECT
-          m.id,
-          m.name,
-          m.gender,
-          m.phone,
-          m.email,
-          m.date_of_birth,
-          m.plan_id,
-          mp.name AS membership_plan,
-          m.status,
-          m.join_date
+    const result = await pool.query(
+      `
+      SELECT
+        m.id,
+        m.name,
+        m.gender,
+        m.phone,
+        m.email,
+        m.date_of_birth,
+        m.plan_id,
+        mp.name AS membership_plan,
+        m.status,
+        m.join_date,
+        m.woreda_id
 
-        FROM members m
+      FROM members m
 
-        LEFT JOIN membership_plans mp
-          ON m.plan_id = mp.id
+      LEFT JOIN membership_plans mp
+        ON m.plan_id = mp.id
 
-        WHERE m.id = $1
-        `,
-        [id]
-      );
+      WHERE m.id = $1
+      `,
+      [id]
+    );
 
 
     res.status(200).json(
@@ -1029,17 +1092,26 @@ const deleteMember = async (
     // DELETE
     // =================================================
 
-    const result =
-      await pool.query(
-        `
-        DELETE FROM members
+    const woredaId = getWoredaScope(req);
 
-        WHERE id = $1
+    let deleteQuery = `
+      DELETE FROM members
+      WHERE id = $1
+    `;
 
-        RETURNING id
-        `,
-        [id]
-      );
+    const deleteValues = [id];
+
+    if (woredaId !== null) {
+      deleteQuery += ` AND woreda_id = $2`;
+      deleteValues.push(woredaId);
+    }
+
+    deleteQuery += ` RETURNING id`;
+
+    const result = await pool.query(
+      deleteQuery,
+      deleteValues
+    );
 
 
     if (
