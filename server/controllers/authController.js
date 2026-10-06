@@ -72,6 +72,13 @@ const login = async (req, res, next) => {
 
     // Find user
     const user = await getUserByEmail(email);
+    console.log("LOGIN USER:", user);
+    console.log("JWT DATA:", {
+  id: user.id,
+  email: user.email,
+  role: user.role,
+  woreda_id: user.woreda_id,
+});
 
     if (!user) {
       return res.status(401).json({
@@ -91,8 +98,10 @@ const login = async (req, res, next) => {
       password,
       user.password_hash
     );
+    console.log("PASSWORD MATCH:", passwordMatch);
 
     if (!passwordMatch) {
+      console.log("PASSWORD FAILED FOR:", user.email);
       return res.status(401).json({
         message: "Invalid email or password",
       });
@@ -104,6 +113,7 @@ const login = async (req, res, next) => {
         id: user.id,
         email: user.email,
         role: user.role,
+        woreda_id: user.woreda_id,
       },
       process.env.JWT_SECRET,
       {
@@ -120,6 +130,7 @@ const login = async (req, res, next) => {
         email: user.email,
         role: user.role,
         status: user.status,
+        woreda_id: user.woreda_id,
       },
     });
   } catch (error) {
