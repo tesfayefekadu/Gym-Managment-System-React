@@ -2,26 +2,35 @@ const pool = require("../config/db");
 
 
 // CREATE USER
-const createUser = async (name, email, passwordHash, role = "Staff") => {
+// CREATE USER
+const createUser = async (
+  name,
+  email,
+  passwordHash,
+  role = "Staff",
+  woreda_id = null
+) => {
   const result = await pool.query(
     `
       INSERT INTO users (
         name,
         email,
         password_hash,
-        role
+        role,
+        woreda_id
       )
-      VALUES ($1, $2, $3, $4)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING
         id,
         name,
         email,
         role,
         status,
+        woreda_id,
         created_at,
         updated_at
     `,
-    [name, email, passwordHash, role]
+    [name, email, passwordHash, role, woreda_id]
   );
 
   return result.rows[0];
@@ -36,6 +45,7 @@ const getUsers = async () => {
       email,
       role,
       status,
+      woreda_id,
       created_at,
       updated_at
     FROM users
@@ -55,6 +65,7 @@ const getUserById = async (id) => {
         email,
         role,
         status,
+        woreda_id,
         created_at,
         updated_at
       FROM users
@@ -77,6 +88,7 @@ const getUserByEmail = async (email) => {
         password_hash,
         role,
         status,
+        woreda_id,
         created_at,
         updated_at
       FROM users
