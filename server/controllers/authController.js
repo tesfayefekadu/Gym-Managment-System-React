@@ -72,19 +72,22 @@ const login = async (req, res, next) => {
 
     // Find user
     const user = await getUserByEmail(email);
+
+    console.log("LOGIN EMAIL:", email);
     console.log("LOGIN USER:", user);
-    console.log("JWT DATA:", {
-  id: user.id,
-  email: user.email,
-  role: user.role,
-  woreda_id: user.woreda_id,
-});
 
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password",
       });
     }
+
+    console.log("JWT DATA:", {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      woreda_id: user.woreda_id,
+    });
 
     // Check account status
     if (user.status !== "Active") {
