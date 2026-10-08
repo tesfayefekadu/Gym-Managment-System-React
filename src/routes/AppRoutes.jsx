@@ -9,6 +9,7 @@ import MembershipPlans from "../pages/MembershipPlans";
 import Attendance from "../pages/Attendance";
 import Payments from "../pages/Payments";
 import Login from "../pages/Login";
+import Woredas from "../pages/Woredas";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 function AppRoutes() {
@@ -81,7 +82,15 @@ function AppRoutes() {
           </Layout>
         }
       />
-      </Route>
+      <Route
+        path="/woredas"
+        element={
+          <Layout>
+            <Woredas />
+          </Layout>
+        }
+      />
+      </Route>    
     </Routes>
   );
 }
