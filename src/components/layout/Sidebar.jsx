@@ -42,6 +42,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: "💳",
       roles: ["Admin", "Manager", "Staff"],
     },
+        {
+      name: "sub-citys",
+      path: "/woredas",
+      icon: "💳",
+      roles: ["Admin",],
+    },
   ];
 
   // Show only pages allowed for the logged-in user's role
