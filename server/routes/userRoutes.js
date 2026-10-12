@@ -54,14 +54,6 @@ router.get(
 // Manager → Staff only
 // ========================================
 
-console.log("createManagedUser:", typeof createManagedUser);
-console.log("validate:", typeof validate);
-console.log(
-  "createManagedUserValidation:",
-  Array.isArray(createManagedUserValidation),
-  typeof createManagedUserValidation
-);
-
 router.post(
   "/",
   authenticateToken,
