@@ -437,15 +437,15 @@ const createMember = async (
     // DUPLICATE PHONE CHECK
     // =================================================
 
-    const phoneResult =
-      await pool.query(
-        `
-        SELECT id
-        FROM members
-        WHERE phone = $1
-        `,
-        [phone]
-      );
+    const phoneResult = await pool.query(
+  `
+    SELECT id
+    FROM members
+    WHERE phone = $1
+      AND woreda_id = $2
+  `,
+  [phone, finalWoredaId]
+);
 
 
     if (
@@ -464,31 +464,23 @@ const createMember = async (
     // DUPLICATE EMAIL CHECK
     // =================================================
 
-    if (email) {
+if (email) {
+  const emailResult = await pool.query(
+    `
+      SELECT id
+      FROM members
+      WHERE LOWER(email) = LOWER($1)
+        AND woreda_id = $2
+    `,
+    [email, finalWoredaId]
+  );
 
-      const emailResult =
-        await pool.query(
-          `
-          SELECT id
-          FROM members
-          WHERE LOWER(email) = LOWER($1)
-          `,
-          [email]
-        );
-
-
-      if (
-        emailResult.rows.length > 0
-      ) {
-
-        return res.status(409).json({
-          message:
-            "A member with this email already exists",
-        });
-
-      }
-
-    }
+  if (emailResult.rows.length > 0) {
+    return res.status(409).json({
+      message: "A member with this email already exists",
+    });
+  }
+}
 
 
     // =================================================
