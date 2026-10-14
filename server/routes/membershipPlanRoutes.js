@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const {
@@ -10,50 +11,49 @@ const {
 
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const requireWoreda = require("../middleware/woredaMiddleware");
 
 const router = express.Router();
 
-// ========================================
-// MEMBERSHIP PLAN ROUTES
-// ========================================
-
-// GET ALL PLANS
+// All three roles can view plans in their permitted scope.
 router.get(
   "/",
   authenticateToken,
-  authorizeRoles("Admin", "Manager"),
+  authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getMembershipPlans
 );
 
-// GET SINGLE PLAN
 router.get(
   "/:id",
   authenticateToken,
-  authorizeRoles("Admin", "Manager"),
+  authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getMembershipPlanById
 );
 
-// CREATE PLAN
+// Only Admin and Manager can manage plans.
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   createMembershipPlan
 );
 
-// UPDATE PLAN
 router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   updateMembershipPlan
 );
 
-// DELETE PLAN
 router.delete(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   deleteMembershipPlan
 );
 
