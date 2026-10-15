@@ -28,7 +28,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       name: "Memberships",
       path: "/membership-plans",
       icon: "📋",
-      roles: ["Admin", "Manager"],
+      roles: ["Admin", "Manager","Staff"],
     },
     {
       name: "Attendance",

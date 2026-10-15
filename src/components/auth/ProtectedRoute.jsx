@@ -1,12 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { isAuthenticated } from "../../services/authService";
+import { getCurrentUser, isAuthenticated } from "../../services/authService";
 
-function ProtectedRoute() {
-  console.log("Token:", localStorage.getItem("token"));
-  console.log("User:", localStorage.getItem("user"));
-
+function ProtectedRoute({ allowedRoles }) {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
+  }
+
+  const user = getCurrentUser();
+
+  // Missing or invalid user data
+  if (!user || !user.role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Restrict access by role when allowedRoles is provided
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;
