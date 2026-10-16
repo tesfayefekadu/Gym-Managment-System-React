@@ -6,36 +6,16 @@ function PlanTable({
   onView,
   onEdit,
   onDelete,
+  canManagePlans = true,
 }) {
   const columns = [
-    {
-      key: "id",
-      label: "ID",
-    },
-    {
-      key: "name",
-      label: "Plan Name",
-    },
-    {
-      key: "duration",
-      label: "Duration",
-    },
-    {
-      key: "price",
-      label: "Price",
-    },
-    {
-      key: "members",
-      label: "Members",
-    },
-    {
-      key: "status",
-      label: "Status",
-    },
-    {
-      key: "action",
-      label: "Action",
-    },
+    { key: "id", label: "ID" },
+    { key: "name", label: "Plan Name" },
+    { key: "duration", label: "Duration" },
+    { key: "price", label: "Price" },
+    { key: "members", label: "Members" },
+    { key: "status", label: "Status" },
+    { key: "action", label: "Action" },
   ];
 
   return (
@@ -47,8 +27,8 @@ function PlanTable({
           key={plan.id}
           plan={plan}
           onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
+          onEdit={canManagePlans ? onEdit : undefined}
+          onDelete={canManagePlans ? onDelete : undefined}
         />
       )}
     />

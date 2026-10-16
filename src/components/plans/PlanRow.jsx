@@ -1,3 +1,4 @@
+
 import Badge from "../common/Badge";
 import Button from "../common/Button";
 
@@ -7,35 +8,32 @@ function PlanRow({
   onEdit,
   onDelete,
 }) {
+  const canManagePlans =
+    typeof onEdit === "function" &&
+    typeof onDelete === "function";
+
   return (
     <tr className="border-b hover:bg-gray-50 transition">
-
-      {/* ID */}
       <td className="px-6 py-4">
         {plan.id}
       </td>
 
-      {/* Plan Name */}
       <td className="px-6 py-4 font-semibold text-gray-800">
         {plan.name}
       </td>
 
-      {/* Duration */}
       <td className="px-6 py-4">
-        {plan.duration_months}
+        {plan.duration_months} months
       </td>
 
-      {/* Price */}
       <td className="px-6 py-4 font-medium">
         {Number(plan.price).toLocaleString()} ETB
       </td>
 
-      {/* Members */}
       <td className="px-6 py-4">
-        {plan.members}
+        {plan.members ?? 0}
       </td>
 
-      {/* Status */}
       <td className="px-6 py-4">
         <Badge
           variant={
@@ -48,10 +46,8 @@ function PlanRow({
         </Badge>
       </td>
 
-      {/* Actions */}
       <td className="px-6 py-4">
         <div className="flex justify-center gap-2">
-
           <Button
             variant="primary"
             onClick={() => onView(plan)}
@@ -59,23 +55,25 @@ function PlanRow({
             View
           </Button>
 
-          <Button
-            variant="warning"
-            onClick={() => onEdit(plan)}
-          >
-            Edit
-          </Button>
+          {canManagePlans && (
+            <>
+              <Button
+                variant="warning"
+                onClick={() => onEdit(plan)}
+              >
+                Edit
+              </Button>
 
-          <Button
-            variant="danger"
-            onClick={() => onDelete(plan.id)}
-          >
-            Delete
-          </Button>
-
+              <Button
+                variant="danger"
+                onClick={() => onDelete(plan.id)}
+              >
+                Delete
+              </Button>
+            </>
+          )}
         </div>
       </td>
-
     </tr>
   );
 }
