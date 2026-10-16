@@ -8,15 +8,13 @@ const {
   deleteMember,
 } = require("../controllers/memberController");
 
-const router = express.Router();
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 const requireWoreda = require("../middleware/woredaMiddleware");
 
-// ========================================
-// MEMBER ROUTES
-// ========================================
+const router = express.Router();
 
+// View members: all three roles, scoped by Woreda
 router.get(
   "/",
   authenticateToken,
@@ -33,6 +31,7 @@ router.get(
   getMemberById
 );
 
+// Reception Staff can register and edit members
 router.post(
   "/",
   authenticateToken,
@@ -49,6 +48,7 @@ router.put(
   updateMember
 );
 
+// Only Admin and Manager can delete members
 router.delete(
   "/:id",
   authenticateToken,
