@@ -382,7 +382,7 @@ const createMember = async (
     const finalWoredaId =
       req.user.role === "Admin"
         ? req.body.woreda_id
-        : woredaId;
+        : req.user.woreda_id;
 
     if (!finalWoredaId) {
       return res.status(400).json({
