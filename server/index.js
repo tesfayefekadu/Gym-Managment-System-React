@@ -12,6 +12,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
+const woredaRoutes = require("./routes/woredaRoutes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/woredas", woredaRoutes);
 
 
 // Test route
