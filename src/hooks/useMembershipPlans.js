@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import {
   getMembershipPlans,
@@ -9,121 +9,63 @@ import {
 
 function useMembershipPlans() {
   const [plans, setPlans] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ==========================
-  // GET MEMBERSHIP PLANS
-  // ==========================
-
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
       const data = await getMembershipPlans();
-
-      setPlans(data);
+      setPlans(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(
-        "Failed to fetch membership plans:",
-        error
-      );
-
-      setError(
-        error.message ||
-          "Failed to load membership plans"
-      );
+      console.error("Fetch membership plans error:", error);
+      setError(error.message || "Failed to load membership plans");
     } finally {
       setLoading(false);
     }
-  };
-
-  // ==========================
-  // LOAD ON COMPONENT MOUNT
-  // ==========================
+  }, []);
 
   useEffect(() => {
     fetchPlans();
-  }, []);
-
-  // ==========================
-  // ADD PLAN
-  // ==========================
+  }, [fetchPlans]);
 
   const addPlan = async (planData) => {
     try {
       setError("");
 
-      const newPlan =
-        await createMembershipPlan(planData);
+      const data = await createMembershipPlan(planData);
+      const newPlan = data.plan ?? data;
 
-      setPlans((prev) => [
-        newPlan,
-        ...prev,
-      ]);
+      setPlans((previousPlans) => [newPlan, ...previousPlans]);
 
       return newPlan;
     } catch (error) {
-      console.error(
-        "Failed to add membership plan:",
-        error
-      );
-
-      setError(
-        error.message ||
-          "Failed to add membership plan"
-      );
-
+      setError(error.message || "Failed to add membership plan");
       throw error;
     }
   };
 
-  // ==========================
-  // UPDATE PLAN
-  // ==========================
-
-  const updatePlan = async (
-    id,
-    planData
-  ) => {
+  const updatePlan = async (id, planData) => {
     try {
       setError("");
 
-      const updatedPlan =
-        await updateMembershipPlanApi(
-          id,
-          planData
-        );
+      const data = await updateMembershipPlanApi(id, planData);
+      const updatedPlan = data.plan ?? data;
 
-      setPlans((prev) =>
-        prev.map((plan) =>
-          plan.id === id
-            ? updatedPlan
-            : plan
+      setPlans((previousPlans) =>
+        previousPlans.map((plan) =>
+          String(plan.id) === String(id) ? updatedPlan : plan
         )
       );
 
       return updatedPlan;
     } catch (error) {
-      console.error(
-        "Failed to update membership plan:",
-        error
-      );
-
-      setError(
-        error.message ||
-          "Failed to update membership plan"
-      );
-
+      setError(error.message || "Failed to update membership plan");
       throw error;
     }
   };
-
-  // ==========================
-  // DELETE PLAN
-  // ==========================
 
   const deletePlan = async (id) => {
     try {
@@ -131,22 +73,13 @@ function useMembershipPlans() {
 
       await deleteMembershipPlanApi(id);
 
-      setPlans((prev) =>
-        prev.filter(
-          (plan) => plan.id !== id
+      setPlans((previousPlans) =>
+        previousPlans.filter(
+          (plan) => String(plan.id) !== String(id)
         )
       );
     } catch (error) {
-      console.error(
-        "Failed to delete membership plan:",
-        error
-      );
-
-      setError(
-        error.message ||
-          "Failed to delete membership plan"
-      );
-
+      setError(error.message || "Failed to delete membership plan");
       throw error;
     }
   };
@@ -154,12 +87,9 @@ function useMembershipPlans() {
   return {
     plans,
     setPlans,
-
     loading,
     error,
-
     fetchPlans,
-
     addPlan,
     updatePlan,
     deletePlan,
