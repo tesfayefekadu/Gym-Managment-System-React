@@ -8,6 +8,7 @@ function MemberForm({
   onSave,
   initialData,
   members = [],
+  membershipPlans = [],
 }) {
   // =====================================================
   // EMPTY FORM
@@ -75,7 +76,7 @@ function MemberForm({
 
         plan_id:
           initialData.plan_id !== null &&
-          initialData.plan_id !== undefined
+            initialData.plan_id !== undefined
             ? String(initialData.plan_id)
             : "",
 
@@ -419,7 +420,7 @@ function MemberForm({
             member.email
               .trim()
               .toLowerCase() ===
-              email.toLowerCase()
+            email.toLowerCase()
           );
 
         });
@@ -689,25 +690,13 @@ function MemberForm({
           options={[
             {
               value: "",
-              label:
-                "Select Membership Plan",
+              label: "Select Membership Plan",
             },
-            {
-              value: "1",
-              label: "Basic",
-            },
-            {
-              value: "2",
-              label: "Standard",
-            },
-            {
-              value: "3",
-              label: "Premium",
-            },
-            {
-              value: "4",
-              label: "VIP",
-            },
+            ...(Array.isArray(membershipPlans) ? membershipPlans : []).map(
+              (plan) => ({
+                value: String(plan.id),
+                label: `${plan.name} — ${plan.price}`,
+              })),
           ]}
         />
 
