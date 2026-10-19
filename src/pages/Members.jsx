@@ -11,6 +11,7 @@ import MemberTable from "../components/members/MemberTable";
 import MemberModal from "../components/members/MemberModal";
 import MemberForm from "../components/members/MemberForm";
 import DeleteModal from "../components/members/DeleteModal";
+import { getMembershipPlans } from "../services/membershipPlanService";
 
 // =====================================================
 // API Service
@@ -104,7 +105,8 @@ function Members() {
     useState(1);
 
   const membersPerPage = 5;
-
+  const [membershipPlans, setMembershipPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
 
   // =====================================================
   // LOAD MEMBERS
@@ -144,7 +146,34 @@ function Members() {
 
     }
   };
+  const loadMembershipPlans = async () => {
+    try {
+      setPlansLoading(true);
 
+      const response = await getMembershipPlans();
+
+      console.log("Membership plans API response:", response);
+
+      // Support common API response shapes
+      const plans = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.plans)
+          ? response.plans
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response?.data?.plans)
+              ? response.data.plans
+              : [];
+
+      setMembershipPlans(plans);
+    } catch (error) {
+      console.error("Failed to load membership plans:", error);
+      setMembershipPlans([]);
+      setError(error.message || "Failed to load membership plans");
+    } finally {
+      setPlansLoading(false);
+    }
+  };
 
   // =====================================================
   // INITIAL LOAD
@@ -154,6 +183,10 @@ function Members() {
 
     loadMembers();
 
+  }, []);
+  useEffect(() => {
+    loadMembers();
+    loadMembershipPlans();
   }, []);
 
 
@@ -768,19 +801,10 @@ function Members() {
         >
 
           <MemberForm
-
-            onSave={
-              handleSaveMember
-            }
-
-            initialData={
-              selectedMember
-            }
-
-            members={
-              members
-            }
-
+            onSave={handleSaveMember}
+            initialData={selectedMember}
+            members={members}
+            membershipPlans={membershipPlans}
           />
 
         </MemberModal>
