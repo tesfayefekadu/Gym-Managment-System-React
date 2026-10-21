@@ -10,46 +10,57 @@ const {
 
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const requireWoreda = require("../middleware/woredaMiddleware");
 
 const router = express.Router();
 
-// GET ALL PAYMENTS
+// ========================================
+// PAYMENT ROUTES
+// Admin   -> all Woredas
+// Manager -> own Woreda only
+// Staff   -> own Woreda only; can view and record payments,
+//            but cannot edit or delete them (financial integrity)
+// ========================================
+
 router.get(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getPayments
 );
 
-// GET PAYMENT BY ID
 router.get(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getPaymentById
 );
 
-// CREATE PAYMENT
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   createPayment
 );
 
-// UPDATE PAYMENT
+// Staff removed here. To let Staff edit payments again,
+// add "Staff" back to this list.
 router.put(
   "/:id",
   authenticateToken,
-  authorizeRoles("Admin", "Manager", "Staff"),
+  authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   updatePayment
 );
 
-// DELETE PAYMENT
 router.delete(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   deletePayment
 );
 

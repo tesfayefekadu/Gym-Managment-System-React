@@ -10,50 +10,54 @@ const {
 
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const requireWoreda = require("../middleware/woredaMiddleware");
 
 const router = express.Router();
 
 // ========================================
 // TRAINER ROUTES
+// Admin   -> all Woredas
+// Manager -> own Woreda only
+// Staff   -> no access (trainer data includes salary)
 // ========================================
 
-// GET ALL TRAINERS
 router.get(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   getTrainers
 );
 
-// GET SINGLE TRAINER
 router.get(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   getTrainerById
 );
 
-// CREATE TRAINER
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   createTrainer
 );
 
-// UPDATE TRAINER
 router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   updateTrainer
 );
 
-// DELETE TRAINER
 router.delete(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   deleteTrainer
 );
 
