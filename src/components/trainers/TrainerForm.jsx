@@ -3,8 +3,15 @@ import { useState, useEffect } from "react";
 import Button from "../common/Button";
 import InputField from "../common/InputField";
 import SelectField from "../common/SelectField";
+import { getWoredas } from "../../services/woredaService";
+import { getCurrentUser } from "../../services/authService";
 
 function TrainerForm({ onSave, initialData }) {
+  // Only Admin picks a Woreda. Managers always create trainers in
+  // their own Woreda (the API takes it from their login token).
+  const isAdmin = getCurrentUser()?.role === "Admin";
+  const showWoredaPicker = isAdmin && !initialData;
+
   const emptyTrainer = {
     name: "",
     gender: "Male",
@@ -15,9 +22,12 @@ function TrainerForm({ onSave, initialData }) {
     salary: "",
     hireDate: "",
     status: "Active",
+    woreda_id: "",
   };
 
   const [formData, setFormData] = useState(emptyTrainer);
+
+  const [woredas, setWoredas] = useState([]);
 
   const [errors, setErrors] = useState({});
 
@@ -30,6 +40,26 @@ function TrainerForm({ onSave, initialData }) {
 
     setErrors({});
   }, [initialData]);
+
+  // Load Woredas for the Admin picker
+  useEffect(() => {
+    if (!showWoredaPicker) return;
+
+    const loadWoredas = async () => {
+      try {
+        const data = await getWoredas();
+        setWoredas(data || []);
+      } catch (error) {
+        console.error("Failed to load woredas:", error);
+        setErrors((prev) => ({
+          ...prev,
+          woreda_id: "Failed to load woredas.",
+        }));
+      }
+    };
+
+    loadWoredas();
+  }, [showWoredaPicker]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,6 +77,11 @@ function TrainerForm({ onSave, initialData }) {
 
   const validateForm = () => {
     const newErrors = {};
+
+    // Woreda (Admin, new trainer only)
+    if (showWoredaPicker && !formData.woreda_id) {
+      newErrors.woreda_id = "Please select a woreda.";
+    }
 
     // Name
     if (!formData.name.trim()) {
@@ -118,7 +153,12 @@ function TrainerForm({ onSave, initialData }) {
 
     if (!validateForm()) return;
 
-    onSave(formData);
+    onSave({
+      ...formData,
+      woreda_id: formData.woreda_id
+        ? Number(formData.woreda_id)
+        : undefined,
+    });
   };
 
   return (
@@ -126,6 +166,28 @@ function TrainerForm({ onSave, initialData }) {
       onSubmit={handleSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-5"
     >
+      {showWoredaPicker && (
+        <div className="md:col-span-2">
+          <SelectField
+            label="Woreda"
+            name="woreda_id"
+            required
+            value={formData.woreda_id}
+            onChange={handleChange}
+            error={errors.woreda_id}
+            options={[
+              { value: "", label: "Select woreda" },
+              ...woredas.map((woreda) => ({
+                value: woreda.id,
+                label: woreda.code
+                  ? `${woreda.name} (${woreda.code})`
+                  : woreda.name,
+              })),
+            ]}
+          />
+        </div>
+      )}
+
       <div>
         <InputField
           label="Full Name"

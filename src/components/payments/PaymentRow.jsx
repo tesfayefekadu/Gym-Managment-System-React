@@ -1,5 +1,6 @@
 import Badge from "../common/Badge";
 import Button from "../common/Button";
+import { getCurrentUser } from "../../services/authService";
 
 function PaymentRow({
   payment,
@@ -24,6 +25,12 @@ function PaymentRow({
         return "danger";
     }
   };
+
+  // Staff can record payments but not edit or delete them
+  // (the API enforces this too; this only hides the buttons)
+  const canModify = ["Admin", "Manager"].includes(
+    getCurrentUser()?.role
+  );
 
   return (
     <tr className="border-b hover:bg-gray-50">
@@ -88,19 +95,27 @@ function PaymentRow({
 
         <div className="flex justify-center gap-2">
 
-          <Button
-            variant="warning"
-            onClick={() => onEdit(payment)}
-          >
-            Edit
-          </Button>
+          {canModify ? (
+            <>
+              <Button
+                variant="warning"
+                onClick={() => onEdit(payment)}
+              >
+                Edit
+              </Button>
 
-          <Button
-            variant="danger"
-            onClick={() => onDelete(payment.id)}
-          >
-            Delete
-          </Button>
+              <Button
+                variant="danger"
+                onClick={() => onDelete(payment.id)}
+              >
+                Delete
+              </Button>
+            </>
+          ) : (
+            <span className="text-xs text-gray-400">
+              View only
+            </span>
+          )}
 
         </div>
 
