@@ -10,11 +10,16 @@ const {
 
 const authenticateToken = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const requireWoreda = require("../middleware/woredaMiddleware");
 
 const router = express.Router();
 
 // ========================================
 // ATTENDANCE ROUTES
+// Admin   -> all Woredas
+// Manager -> own Woreda only
+// Staff   -> own Woreda only (front-desk work: view, record, correct)
+// Delete is Admin / Manager only.
 // ========================================
 
 // GET ALL ATTENDANCE
@@ -22,6 +27,7 @@ router.get(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getAttendance
 );
 
@@ -30,6 +36,7 @@ router.get(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   getAttendanceById
 );
 
@@ -38,6 +45,7 @@ router.post(
   "/",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   createAttendance
 );
 
@@ -46,6 +54,7 @@ router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager", "Staff"),
+  requireWoreda,
   updateAttendance
 );
 
@@ -54,6 +63,7 @@ router.delete(
   "/:id",
   authenticateToken,
   authorizeRoles("Admin", "Manager"),
+  requireWoreda,
   deleteAttendance
 );
 

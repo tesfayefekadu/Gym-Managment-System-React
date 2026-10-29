@@ -1,17 +1,11 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 
-const {
-  register,
-  login,
-} = require("../controllers/authController");
+const { login } = require("../controllers/authController");
 
 const validate = require("../middleware/validationMiddleware");
 
-const {
-  registerValidation,
-  loginValidation,
-} = require("../validators/authValidator");
+const { loginValidation } = require("../validators/authValidator");
 
 const router = express.Router();
 
@@ -26,14 +20,8 @@ const authLimiter = rateLimit({
   },
 });
 
-// Register
-router.post(
-  "/register",
-  authLimiter,
-  registerValidation,
-  validate,
-  register
-);
+// NOTE: public /register removed. Create users with the protected
+// POST /api/users (Admin -> Manager, Manager -> Staff).
 
 // Login
 router.post(
